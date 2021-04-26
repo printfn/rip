@@ -1,22 +1,6 @@
 #include <vector>
 #include <cstdio>
 
-struct Voxels {
-    int width = 0;
-    int height = 0;
-    std::vector<int> voxels;
-
-    int maxX() const {
-        return voxels.size() / width / height;
-    }
-    int maxY() const {
-        return height;
-    }
-    int maxZ() const {
-        return width;
-    }
-};
-
 enum class Direction { XP, XN, YP, YN, ZP, ZN };
 
 struct Pos {
@@ -42,27 +26,44 @@ struct Pos {
     }
 };
 
+struct Voxels {
+    int width = 0;
+    int height = 0;
+    std::vector<int> voxels;
+
+    int maxX() const {
+        return voxels.size() / width / height;
+    }
+    int maxY() const {
+        return height;
+    }
+    int maxZ() const {
+        return width;
+    }
+    void print(bool detailed = false) const;
+};
+
 int get(const Voxels &v, Pos p) {
     return v.voxels[p.x * v.width * v.height + p.y * v.width + p.z];
 }
 
-void set(Voxels &v, Pos p, int value) {
-    v.voxels[p.x * v.width * v.height + p.y * v.width + p.z] = value;
-}
-
-void print(const Voxels &v, bool detailed = false) {
-    printf("Dimensions: %ix%ix%i\n", v.maxX(), v.maxY(), v.maxZ());
+void Voxels::print(bool detailed) const {
+    printf("Dimensions: %ix%ix%i\n", maxX(), maxY(), maxZ());
     if (detailed) {
-        for (int x = 0; x < v.maxX(); ++x) {
-            for (int y = 0; y < v.maxX(); ++y) {
-                for (int z = 0; z < v.maxX(); ++z) {
-                    printf("%i", get(v, Pos(x, y, z)));
+        for (int x = 0; x < maxX(); ++x) {
+            for (int y = 0; y < maxX(); ++y) {
+                for (int z = 0; z < maxX(); ++z) {
+                    printf("%i", get(*this, Pos(x, y, z)));
                 }
                 printf("\n");
             }
             printf("\n\n");
         }
     }
+}
+
+void set(Voxels &v, Pos p, int value) {
+    v.voxels[p.x * v.width * v.height + p.y * v.width + p.z] = value;
 }
 
 bool exists(const Voxels &v, Pos p) {
@@ -91,8 +92,35 @@ bool hasFreePassage(const Voxels &v, Pos p, Direction dir) {
     return true;
 }
 
-std::vector<Pos> initialSeedCandidates(const Voxels &v) {
-    return {};
+std::vector<Pos> initialSeedCandidates(const Voxels &v, bool debug = false) {
+    std::vector<Pos> results;
+    int skippedDueToWrongFaceCount = 0;
+    int skippedDueToNonFreePassage = 0;
+    for (int x = 0; x < v.maxX(); ++x) {
+        for (int y = 0; y < v.maxX(); ++y) {
+            for (int z = 0; z < v.maxX(); ++z) {
+                auto p = Pos(x, y, z);
+                if (!exists(v, p)) {
+                    continue;
+                }
+                if (numExteriorFaces(v, p) != 2) {
+                    ++skippedDueToWrongFaceCount;
+                    continue;
+                }
+                if (!hasFreePassage(v, p, Direction::YP)) {
+                    ++skippedDueToNonFreePassage;
+                    continue;
+                }
+                results.push_back(p);
+            }
+        }
+    }
+    if (debug) {
+        printf("Found %lu initial seed candidates (rejected %i/%i)\n",
+            results.size(), skippedDueToWrongFaceCount,
+            skippedDueToNonFreePassage);
+    }
+    return results;
 }
 
 Voxels makeCube(int length) {
@@ -107,6 +135,7 @@ Voxels makeCube(int length) {
 
 int main(int argc, char *argv[]) {
     auto cube = makeCube(3);
-    print(cube);
+    cube.print();
+    auto seedCandidates = initialSeedCandidates(cube, true);
     return 0;
 }
