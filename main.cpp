@@ -68,12 +68,14 @@ struct Voxels {
     int maxZ() const {
         return width;
     }
+    int operator[](Pos p) const {
+        return voxels[p.x * width * height + p.y * width + p.z];
+    }
+    int &operator[](Pos p) {
+        return voxels[p.x * width * height + p.y * width + p.z];
+    }
     void print(bool detailed = false) const;
 };
-
-int get(const Voxels &v, Pos p) {
-    return v.voxels[p.x * v.width * v.height + p.y * v.width + p.z];
-}
 
 void Voxels::print(bool detailed) const {
     printf("Dimensions: %ix%ix%i\n", maxX(), maxY(), maxZ());
@@ -81,7 +83,7 @@ void Voxels::print(bool detailed) const {
         for (int x = 0; x < maxX(); ++x) {
             for (int y = 0; y < maxX(); ++y) {
                 for (int z = 0; z < maxX(); ++z) {
-                    printf("%i", get(*this, Pos(x, y, z)));
+                    printf("%i", (*this)[Pos(x, y, z)]);
                 }
                 printf("\n");
             }
@@ -90,14 +92,10 @@ void Voxels::print(bool detailed) const {
     }
 }
 
-void set(Voxels &v, Pos p, int value) {
-    v.voxels[p.x * v.width * v.height + p.y * v.width + p.z] = value;
-}
-
 bool exists(const Voxels &v, Pos p) {
     if (p.x < 0 || p.y < 0 || p.z < 0) return false;
     if (p.x >= v.maxX() || p.y >= v.maxY() || p.z >= v.maxZ()) return false;
-    int val = get(v, p);
+    int val = v[p];
     return val != 0;
 }
 
