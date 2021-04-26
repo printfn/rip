@@ -3,6 +3,17 @@
 
 enum class Direction { XP, XN, YP, YN, ZP, ZN };
 
+std::vector<Direction> directions() {
+    return {
+        Direction::XP,
+        Direction::XN,
+        Direction::YP,
+        Direction::YN,
+        Direction::ZP,
+        Direction::ZN,
+    };
+}
+
 struct Pos {
     int x, y, z;
 
@@ -79,15 +90,19 @@ bool exists(const Voxels &v, Pos p) {
     return val != 0;
 }
 
-int numExteriorFaces(const Voxels &v, Pos p) {
-    int num = 6; // maximum
-    if (exists(v, p.nextInDirection(Direction::XP))) --num;
-    if (exists(v, p.nextInDirection(Direction::XN))) --num;
-    if (exists(v, p.nextInDirection(Direction::YP))) --num;
-    if (exists(v, p.nextInDirection(Direction::YN))) --num;
-    if (exists(v, p.nextInDirection(Direction::ZP))) --num;
-    if (exists(v, p.nextInDirection(Direction::ZN))) --num;
+int numNeighbours(const Voxels &v, Pos p) {
+    int num = 0;
+    if (exists(v, p.nextInDirection(Direction::XP))) ++num;
+    if (exists(v, p.nextInDirection(Direction::XN))) ++num;
+    if (exists(v, p.nextInDirection(Direction::YP))) ++num;
+    if (exists(v, p.nextInDirection(Direction::YN))) ++num;
+    if (exists(v, p.nextInDirection(Direction::ZP))) ++num;
+    if (exists(v, p.nextInDirection(Direction::ZN))) ++num;
     return num;
+}
+
+int numExteriorFaces(const Voxels &v, Pos p) {
+    return 6 - numNeighbours(v, p);
 }
 
 bool hasFreePassage(const Voxels &v, Pos p, Direction dir) {
@@ -148,10 +163,32 @@ Voxels makeCube(int length) {
     return result;
 }
 
+double accessibilityHeuristic(const Voxels &v, Pos p, int j) {
+    const double WEIGHT_FACTOR = 0.1;
+    if (j == 0) {
+        return numNeighbours(v, p);
+    } else {
+        auto res = accessibilityHeuristic(v, p, j - 1);
+        auto weight = pow(WEIGHT_FACTOR, (double)j);
+        for (auto d : directions()) {
+            auto posInD = p.nextInDirection(d);
+            if (!exists(v, posInD)) continue;
+            res += weight * accessibilityHeuristic(v, posInD, j - 1);
+        }
+        return res;
+    }
+}
+
+
+
 int main(int argc, char *argv[]) {
     auto cube = makeCube(3);
     cube.print();
     Pos seed = findInitialSeed(cube, true);
     seed.print("seed");
+    printf("accessibility: j = 0: %f\n", accessibilityHeuristic(cube, seed, 0));
+    printf("accessibility: j = 1: %f\n", accessibilityHeuristic(cube, seed, 1));
+    printf("accessibility: j = 2: %f\n", accessibilityHeuristic(cube, seed, 2));
+    printf("accessibility: j = 3: %f\n", accessibilityHeuristic(cube, seed, 3));
     return 0;
 }
