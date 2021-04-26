@@ -14,6 +14,11 @@ const char *printDir(Direction d) {
     }
 }
 
+void fail(const char *message) {
+    fprintf(stderr, "%s\n", message);
+    abort();
+}
+
 std::vector<Direction> directions() {
     return {
         Direction::XP,
@@ -169,8 +174,7 @@ std::vector<OrientedPos> initialSeedCandidates(const Voxels &v, bool debug = fal
 OrientedPos findInitialSeed(const Voxels &v, bool debug = false) {
     auto seeds = initialSeedCandidates(v, debug);
     if (seeds.empty()) {
-        printf("Could not find any initial seed candidates!\n");
-        abort();
+        fail("Could not find any initial seed candidates!");
     }
     return seeds[0];
 }
@@ -186,6 +190,9 @@ Voxels makeCube(int length) {
 }
 
 double accessibilityHeuristic(const Voxels &v, Pos p, int j) {
+    if (j < 0) {
+        fail("j must not be less than zero");
+    }
     const double WEIGHT_FACTOR = 0.1;
     if (j == 0) {
         return numNeighbours(v, p);
