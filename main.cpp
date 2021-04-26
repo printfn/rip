@@ -1,4 +1,6 @@
 #include <vector>
+#include <deque>
+#include <unordered_set>
 #include <cstdio>
 
 enum class Direction { XP, XN, YP, YN, ZP, ZN };
@@ -11,6 +13,17 @@ const char *printDir(Direction d) {
         case Direction::YN: return "-y";
         case Direction::ZP: return "+z";
         case Direction::ZN: return "-z";
+    }
+}
+
+Direction oppositeDirection(Direction d) {
+    switch (d) {
+        case Direction::XP: return Direction::XN;
+        case Direction::XN: return Direction::XP;
+        case Direction::YP: return Direction::YN;
+        case Direction::YN: return Direction::YP;
+        case Direction::ZP: return Direction::ZN;
+        case Direction::ZN: return Direction::ZP;
     }
 }
 
@@ -56,6 +69,9 @@ struct Pos {
             printf("%s: ", description);
         }
         printf("(%i,%i,%i)\n", x, y, z);
+    }
+    bool operator==(const Pos &other) const {
+        return x == other.x && y == other.y && z == other.z;
     }
 };
 
@@ -129,7 +145,7 @@ bool hasFreePassage(const Voxels &v, Pos p, Direction dir) {
 
 struct OrientedPos {
     Pos pos;
-    Direction dir;
+    Direction dir; // direction in which no cube exists
 
     OrientedPos(Pos p, Direction d) : pos{p}, dir{d} {}
 };
@@ -208,6 +224,51 @@ double accessibilityHeuristic(const Voxels &v, Pos p, int j) {
     }
 }
 
+struct OrientedPair {
+    Pos blocking, blockee;
+};
+
+std::vector<OrientedPair> breadthFirstPairSearch(const Voxels &v, OrientedPos seed) {
+    std::vector<OrientedPair> results;
+    std::vector<Pos> done;
+    std::deque<Pos> queue{seed.pos};
+    while (!queue.empty() && results.size() < 50) {
+        auto pos = queue.front();
+        queue.pop_front();
+
+        auto otherPosInPair = pos.nextInDirection(oppositeDirection(seed.dir));
+        if (exists(v, pos) && exists(v, otherPosInPair)) {
+            OrientedPair result{pos, otherPosInPair};
+            results.push_back(result);
+        }
+
+        done.push_back(pos);
+        for (Direction dir : directions()) {
+            auto nextPos = pos.nextInDirection(dir);
+            if (nextPos == seed.pos) continue;
+            if (!exists(v, nextPos)) continue;
+            if (std::find(done.begin(), done.end(), nextPos) != done.end()) continue;
+            if (std::find(queue.begin(), queue.end(), nextPos) != queue.end()) continue;
+            queue.push_back(nextPos);
+        }
+    }
+    return results;
+}
+
+std::vector<OrientedPair> inaccessiblePairs(const Voxels &v, OrientedPos seed) {
+    std::vector<OrientedPair> candidates = breadthFirstPairSearch(v, seed);
+    std::sort(candidates.begin(), candidates.end(),
+        [&v](const OrientedPair &p1, const OrientedPair &p2) {
+            double a1 = accessibilityHeuristic(v, p1.blockee, 3);
+            double a2 = accessibilityHeuristic(v, p2.blockee, 3);
+            return a1 < a2;
+        });
+    while (candidates.size() > 10) {
+        candidates.pop_back();
+    }
+    return candidates;
+}
+
 int main(int argc, char *argv[]) {
     auto cube = makeCube(3);
     cube.print();
@@ -218,5 +279,10 @@ int main(int argc, char *argv[]) {
     printf("accessibility: j = 1: %f\n", accessibilityHeuristic(cube, seed.pos, 1));
     printf("accessibility: j = 2: %f\n", accessibilityHeuristic(cube, seed.pos, 2));
     printf("accessibility: j = 3: %f\n", accessibilityHeuristic(cube, seed.pos, 3));
+    auto pairs = inaccessiblePairs(cube, seed);
+    for (auto &pair : pairs) {
+        pair.blocking.print("blocking");
+        pair.blockee.print("blockee");
+    }
     return 0;
 }
