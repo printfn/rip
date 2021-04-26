@@ -3,6 +3,17 @@
 
 enum class Direction { XP, XN, YP, YN, ZP, ZN };
 
+const char *printDir(Direction d) {
+    switch (d) {
+        case Direction::XP: return "+x";
+        case Direction::XN: return "-x";
+        case Direction::YP: return "+y";
+        case Direction::YN: return "-y";
+        case Direction::ZP: return "+z";
+        case Direction::ZN: return "-z";
+    }
+}
+
 std::vector<Direction> directions() {
     return {
         Direction::XP,
@@ -113,8 +124,15 @@ bool hasFreePassage(const Voxels &v, Pos p, Direction dir) {
     return true;
 }
 
-std::vector<Pos> initialSeedCandidates(const Voxels &v, bool debug = false) {
-    std::vector<Pos> results;
+struct OrientedPos {
+    Pos pos;
+    Direction dir;
+
+    OrientedPos(Pos p, Direction d) : pos{p}, dir{d} {}
+};
+
+std::vector<OrientedPos> initialSeedCandidates(const Voxels &v, bool debug = false) {
+    std::vector<OrientedPos> results;
     int skippedDueToWrongFaceCount = 0;
     int skippedDueToNonFreePassage = 0;
     for (int x = 0; x < v.maxX(); ++x) {
@@ -132,7 +150,13 @@ std::vector<Pos> initialSeedCandidates(const Voxels &v, bool debug = false) {
                     ++skippedDueToNonFreePassage;
                     continue;
                 }
-                results.push_back(p);
+                Direction dir;
+                if (!exists(v, p.nextInDirection(Direction::XP))) dir = Direction::XP;
+                if (!exists(v, p.nextInDirection(Direction::XN))) dir = Direction::XN;
+                if (!exists(v, p.nextInDirection(Direction::YN))) dir = Direction::YN;
+                if (!exists(v, p.nextInDirection(Direction::ZP))) dir = Direction::ZP;
+                if (!exists(v, p.nextInDirection(Direction::ZN))) dir = Direction::ZN;
+                results.push_back(OrientedPos(p, dir));
             }
         }
     }
@@ -144,7 +168,7 @@ std::vector<Pos> initialSeedCandidates(const Voxels &v, bool debug = false) {
     return results;
 }
 
-Pos findInitialSeed(const Voxels &v, bool debug = false) {
+OrientedPos findInitialSeed(const Voxels &v, bool debug = false) {
     auto seeds = initialSeedCandidates(v, debug);
     if (seeds.empty()) {
         printf("Could not find any initial seed candidates!\n");
@@ -179,16 +203,15 @@ double accessibilityHeuristic(const Voxels &v, Pos p, int j) {
     }
 }
 
-
-
 int main(int argc, char *argv[]) {
     auto cube = makeCube(3);
     cube.print();
-    Pos seed = findInitialSeed(cube, true);
-    seed.print("seed");
-    printf("accessibility: j = 0: %f\n", accessibilityHeuristic(cube, seed, 0));
-    printf("accessibility: j = 1: %f\n", accessibilityHeuristic(cube, seed, 1));
-    printf("accessibility: j = 2: %f\n", accessibilityHeuristic(cube, seed, 2));
-    printf("accessibility: j = 3: %f\n", accessibilityHeuristic(cube, seed, 3));
+    OrientedPos seed = findInitialSeed(cube, true);
+    seed.pos.print("seed");
+    printf("direction: %s\n", printDir(seed.dir));
+    printf("accessibility: j = 0: %f\n", accessibilityHeuristic(cube, seed.pos, 0));
+    printf("accessibility: j = 1: %f\n", accessibilityHeuristic(cube, seed.pos, 1));
+    printf("accessibility: j = 2: %f\n", accessibilityHeuristic(cube, seed.pos, 2));
+    printf("accessibility: j = 3: %f\n", accessibilityHeuristic(cube, seed.pos, 3));
     return 0;
 }
