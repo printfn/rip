@@ -24,6 +24,12 @@ struct Pos {
         }
         return res;
     }
+    void print(const char *description = nullptr) const {
+        if (description) {
+            printf("%s: ", description);
+        }
+        printf("(%i,%i,%i)\n", x, y, z);
+    }
 };
 
 struct Voxels {
@@ -123,6 +129,15 @@ std::vector<Pos> initialSeedCandidates(const Voxels &v, bool debug = false) {
     return results;
 }
 
+Pos findInitialSeed(const Voxels &v, bool debug = false) {
+    auto seeds = initialSeedCandidates(v, debug);
+    if (seeds.empty()) {
+        printf("Could not find any initial seed candidates!\n");
+        abort();
+    }
+    return seeds[0];
+}
+
 Voxels makeCube(int length) {
     Voxels result;
     result.width = length;
@@ -136,6 +151,7 @@ Voxels makeCube(int length) {
 int main(int argc, char *argv[]) {
     auto cube = makeCube(3);
     cube.print();
-    auto seedCandidates = initialSeedCandidates(cube, true);
+    Pos seed = findInitialSeed(cube, true);
+    seed.print("seed");
     return 0;
 }
