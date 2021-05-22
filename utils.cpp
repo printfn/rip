@@ -1,10 +1,10 @@
 #include "utils.h"
 #include <cstdio>
-#include <cstdlib>
+#include <iostream>
 
 void fail(const char *message) {
     if (message) {
-        fprintf(stderr, "%s\n", message);
+        std::cerr << message << std::endl;
     }
     abort();
 }

@@ -62,7 +62,7 @@ int Voxels::numNeighboursAt(Pos p) const {
     return num;
 }
 
-std::ostream &operator<<(std::ostream &os, Voxels const &v) {
+std::ostream &operator<<(std::ostream &os, const Voxels &v) {
     int mx = v.maxX();
     int my = v.maxY();
     int mz = v.maxZ();

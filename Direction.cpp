@@ -7,7 +7,7 @@ Direction::operator Value() const {
     return value;
 }
 
-std::ostream &operator<<(std::ostream &os, Direction const &dir) {
+std::ostream &operator<<(std::ostream &os, const Direction &dir) {
     switch (dir) {
         case Direction::XP: return os << "+x";
         case Direction::XN: return os << "-x";

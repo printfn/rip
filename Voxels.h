@@ -26,7 +26,7 @@ public:
 
     int numNeighboursAt(Pos p) const;
 
-    friend std::ostream &operator<<(std::ostream &os, Voxels const &v);
+    friend std::ostream &operator<<(std::ostream &os, const Voxels &v);
 };
 
 #endif // HEADER_VOXELS

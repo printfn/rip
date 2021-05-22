@@ -13,7 +13,7 @@ struct Pos {
     void print(const char *description = nullptr) const;
     bool operator==(const Pos &other) const;
 
-    friend std::ostream &operator<<(std::ostream &os, Pos const &p);
+    friend std::ostream &operator<<(std::ostream &os, const Pos &p);
 };
 
 #endif // HEADER_POS

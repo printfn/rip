@@ -17,7 +17,7 @@ public:
     // Disallow using Direction in if statements (e.g. if (direction))
     explicit operator bool() = delete;
 
-    friend std::ostream &operator<<(std::ostream &os, Direction const &dir);
+    friend std::ostream &operator<<(std::ostream &os, const Direction &dir);
 
     Direction opposite() const;
 
