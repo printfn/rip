@@ -1,4 +1,5 @@
 #include "Direction.h"
+#include "Pos.h"
 
 #include <vector>
 #include <deque>
@@ -9,38 +10,6 @@ void fail(const char *message) {
     fprintf(stderr, "%s\n", message);
     abort();
 }
-
-struct Pos {
-    int x, y, z;
-
-    Pos(int x, int y, int z) {
-        this->x = x;
-        this->y = y;
-        this->z = z;
-    }
-
-    Pos nextInDirection(Direction d) const {
-        auto res = *this;
-        switch (d) {
-            case Direction::XP: ++res.x; break;
-            case Direction::XN: --res.x; break;
-            case Direction::YP: ++res.y; break;
-            case Direction::YN: --res.y; break;
-            case Direction::ZP: ++res.z; break;
-            case Direction::ZN: --res.z; break;
-        }
-        return res;
-    }
-    void print(const char *description = nullptr) const {
-        if (description) {
-            printf("%s: ", description);
-        }
-        printf("(%i,%i,%i)\n", x, y, z);
-    }
-    bool operator==(const Pos &other) const {
-        return x == other.x && y == other.y && z == other.z;
-    }
-};
 
 struct Voxels {
     int width = 0;

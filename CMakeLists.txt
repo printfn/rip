@@ -15,4 +15,5 @@ project(puzzles)
 
 add_executable(puzzles
     Direction.cpp
-    main.cpp)
+    main.cpp
+    Pos.cpp)
