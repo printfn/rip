@@ -87,25 +87,6 @@ Voxels makeCube(int length) {
     return result;
 }
 
-double accessibilityHeuristic(const Voxels &v, Pos p, int j) {
-    if (j < 0) {
-        fail("j must not be less than zero");
-    }
-    const double WEIGHT_FACTOR = 0.1;
-    if (j == 0) {
-        return v.numNeighboursAt(p);
-    } else {
-        auto res = accessibilityHeuristic(v, p, j - 1);
-        auto weight = pow(WEIGHT_FACTOR, (double)j);
-        for (auto d : ALL_DIRECTIONS) {
-            auto posInD = p.nextInDirection(d);
-            if (!v.existsAt(posInD)) continue;
-            res += weight * accessibilityHeuristic(v, posInD, j - 1);
-        }
-        return res;
-    }
-}
-
 struct OrientedPair {
     Pos blocking, blockee;
 };
@@ -141,8 +122,8 @@ std::vector<OrientedPair> inaccessiblePairs(const Voxels &v, OrientedPos seed) {
     std::vector<OrientedPair> candidates = breadthFirstPairSearch(v, seed);
     std::sort(candidates.begin(), candidates.end(),
         [&v](const OrientedPair &p1, const OrientedPair &p2) {
-            double a1 = accessibilityHeuristic(v, p1.blockee, 3);
-            double a2 = accessibilityHeuristic(v, p2.blockee, 3);
+            double a1 = v.accessibilityHeuristic(p1.blockee, 3);
+            double a2 = v.accessibilityHeuristic(p2.blockee, 3);
             return a1 < a2;
         });
     while (candidates.size() > 10) {
@@ -219,18 +200,36 @@ int initGlfw() {
     return 1;
 }
 
-int main() {
-    initGlfw();
-    auto cube = solvedThreeCube();
-    std::cout << cube << std::endl;
-    OrientedPos seed = findInitialSeed(cube, true);
+Voxels initialiseVoxels(int argc, char *argv[]) {
+    switch (argc) {
+        case 1:
+            std::cout << "Using default shape" << std::endl;
+            return solvedThreeCube();
+        case 2:
+            std::cout << "Reading file " << argv[1] << "..." << std::endl;
+            return Voxels::readFile(argv[1]);
+        default:
+            std::cout << "Usage: ./puzzles <shape file>" << std::endl;
+            std::cout << "Using default shape" << std::endl;
+            return solvedThreeCube();
+    }
+}
+
+int main(int argc, char *argv[]) {
+    if (argc == 2) {
+        std::cout << "Reading file " << argv[1] << "..." << std::endl;
+
+    }
+    auto voxels = initialiseVoxels(argc, argv);
+    std::cout << voxels << std::endl;
+    OrientedPos seed = findInitialSeed(voxels, true);
     std::cout << "seed: " << seed.pos << std::endl;
     std::cout << "direction: " << seed.dir << std::endl;
-    printf("accessibility: j = 0: %f\n", accessibilityHeuristic(cube, seed.pos, 0));
-    printf("accessibility: j = 1: %f\n", accessibilityHeuristic(cube, seed.pos, 1));
-    printf("accessibility: j = 2: %f\n", accessibilityHeuristic(cube, seed.pos, 2));
-    printf("accessibility: j = 3: %f\n", accessibilityHeuristic(cube, seed.pos, 3));
-    auto pairs = inaccessiblePairs(cube, seed);
+    printf("accessibility: j = 0: %f\n", voxels.accessibilityHeuristic(seed.pos, 0));
+    printf("accessibility: j = 1: %f\n", voxels.accessibilityHeuristic(seed.pos, 1));
+    printf("accessibility: j = 2: %f\n", voxels.accessibilityHeuristic(seed.pos, 2));
+    printf("accessibility: j = 3: %f\n", voxels.accessibilityHeuristic(seed.pos, 3));
+    auto pairs = inaccessiblePairs(voxels, seed);
     for (auto &pair : pairs) {
         std::cout << "blocking: " << pair.blocking << std::endl;
         std::cout << "blockee:  " << pair.blockee << std::endl;

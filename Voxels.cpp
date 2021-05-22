@@ -10,6 +10,11 @@ Voxels::Voxels(int width, int height, int depth) : width{width}, height{height} 
     }
 }
 
+Voxels Voxels::readFile(const char *filename) {
+    Voxels result{5, 3, 7};
+    return result;
+}
+
 int Voxels::maxX() const {
     return voxels.size() / width / height;
 }
@@ -82,4 +87,28 @@ std::ostream &operator<<(std::ostream &os, const Voxels &v) {
         }
     }
     return os;
+}
+
+double Voxels::accessibilityHeuristic(Pos p, int j) const {
+    if (j < 0) {
+        fail("j must not be less than zero");
+    }
+    const double WEIGHT_FACTOR = 0.1;
+    if (j == 0) {
+        double result = numNeighboursAt(p);
+        return result;
+    } else {
+        auto result = accessibilityHeuristic(p, j - 1);
+        auto weight = pow(WEIGHT_FACTOR, (double)j);
+        for (auto d : ALL_DIRECTIONS) {
+            auto posInD = p.nextInDirection(d);
+            if (!existsAt(posInD)) continue;
+            result += weight * accessibilityHeuristic(posInD, j - 1);
+        }
+        return result;
+    }
+}
+
+void Voxels::invalidateAccessibilityHeuristic() const {
+    accessibilityCache = {};
 }
