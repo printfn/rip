@@ -39,6 +39,11 @@ Voxels Voxels::readFile(const std::string &filename) {
         strstream = std::stringstream{line};
         char ch = '\0';
         while (strstream >> ch) {
+            if ((size_t)voxelIdx >= result.voxels.size()) {
+                std::cerr << "Too many voxels: expected "
+                    << (width * height * depth) << std::endl;
+                exit(1);
+            }
             switch (ch) {
                 case '.':
                     result.voxels[voxelIdx++] = 0;
