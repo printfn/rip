@@ -155,35 +155,35 @@ std::vector<OrientedPair> inaccessiblePairs(const Voxels &v, OrientedPos seed) {
 Voxels solvedThreeCube() {
     Voxels result{3, 3, 3};
 
-    result[Pos{0, 0, 0}] = 1;
-    result[Pos{0, 0, 1}] = 1;
-    result[Pos{0, 0, 2}] = 1;
-    result[Pos{0, 1, 0}] = 2;
-    result[Pos{0, 1, 1}] = 1;
-    result[Pos{0, 1, 2}] = 2;
-    result[Pos{0, 2, 0}] = 2;
-    result[Pos{0, 2, 1}] = 1;
-    result[Pos{0, 2, 2}] = 2;
+    result[{0, 0, 0}] = 1;
+    result[{0, 0, 1}] = 1;
+    result[{0, 0, 2}] = 1;
+    result[{0, 1, 0}] = 2;
+    result[{0, 1, 1}] = 1;
+    result[{0, 1, 2}] = 2;
+    result[{0, 2, 0}] = 2;
+    result[{0, 2, 1}] = 1;
+    result[{0, 2, 2}] = 2;
 
-    result[Pos{1, 0, 0}] = 2;
-    result[Pos{1, 0, 1}] = 4;
-    result[Pos{1, 0, 2}] = 4;
-    result[Pos{1, 1, 0}] = 2;
-    result[Pos{1, 1, 1}] = 2;
-    result[Pos{1, 1, 2}] = 2;
-    result[Pos{1, 2, 0}] = 3;
-    result[Pos{1, 2, 1}] = 1;
-    result[Pos{1, 2, 2}] = 1;
+    result[{1, 0, 0}] = 2;
+    result[{1, 0, 1}] = 4;
+    result[{1, 0, 2}] = 4;
+    result[{1, 1, 0}] = 2;
+    result[{1, 1, 1}] = 2;
+    result[{1, 1, 2}] = 2;
+    result[{1, 2, 0}] = 3;
+    result[{1, 2, 1}] = 1;
+    result[{1, 2, 2}] = 1;
 
-    result[Pos{2, 0, 0}] = 2;
-    result[Pos{2, 0, 1}] = 3;
-    result[Pos{2, 0, 2}] = 4;
-    result[Pos{2, 1, 0}] = 3;
-    result[Pos{2, 1, 1}] = 3;
-    result[Pos{2, 1, 2}] = 4;
-    result[Pos{2, 2, 0}] = 3;
-    result[Pos{2, 2, 1}] = 4;
-    result[Pos{2, 2, 2}] = 4;
+    result[{2, 0, 0}] = 2;
+    result[{2, 0, 1}] = 3;
+    result[{2, 0, 2}] = 4;
+    result[{2, 1, 0}] = 3;
+    result[{2, 1, 1}] = 3;
+    result[{2, 1, 2}] = 4;
+    result[{2, 2, 0}] = 3;
+    result[{2, 2, 1}] = 4;
+    result[{2, 2, 2}] = 4;
     return result;
 }
 
