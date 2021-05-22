@@ -1,7 +1,6 @@
 #include "Direction.h"
 #include "Pos.h"
 #include "Voxels.h"
-#include "utils.h"
 
 #include <vector>
 #include <deque>
@@ -70,7 +69,8 @@ std::vector<OrientedPos> initialSeedCandidates(const Voxels &v, bool debug = fal
 OrientedPos findInitialSeed(const Voxels &v, bool debug = false) {
     auto seeds = initialSeedCandidates(v, debug);
     if (seeds.empty()) {
-        fail("Could not find any initial seed candidates!");
+        std::cerr << "Could not find any initial seed candidates!" << std::endl;
+        exit(1);
     }
     return seeds[0];
 }

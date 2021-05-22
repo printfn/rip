@@ -1,7 +1,6 @@
 #include "Voxels.h"
 #include "Direction.h"
 #include "Pos.h"
-#include "utils.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -16,17 +15,22 @@ Voxels Voxels::readFile(const std::string &filename) {
     std::ifstream fin{filename};
     if (!fin) {
         std::cerr << "Failed to open file " << filename << ": " << strerror(errno) << std::endl;
-        fail();
+        exit(1);
     }
     std::string line;
     if (!std::getline(fin, line)) {
-        fail("Failed to read shape dimensions");
+        std::cerr << "Failed to read shape dimensions" << std::endl;
+        exit(1);
     }
     std::stringstream strstream{line};
     int width = 0, height = 0, depth = 0;
     strstream >> width;
     strstream >> height;
     strstream >> depth;
+    if (width <= 0 || height <= 0 || depth <= 0) {
+        std::cerr << "Width, height and depth must all be greater than 0" << std::endl;
+        exit(1);
+    }
     Voxels result{width, height, depth};
     int voxelIdx = 0;
     while (std::getline(fin, line)) {
@@ -43,14 +47,14 @@ Voxels Voxels::readFile(const std::string &filename) {
                 default:
                     std::cerr << "Unexpected character at voxel index "
                         << voxelIdx << ": '" << ch << "'" << std::endl;
-                    fail();
+                    exit(1);
             }
         }
     }
     if (voxelIdx < width * height * depth) {
         std::cerr << "Expected " << (width * height * depth) << " voxels, "
             << "found " << voxelIdx << std::endl;
-        fail();
+        exit(1);
     }
     return result;
 }
@@ -83,7 +87,7 @@ bool Voxels::existsAt(Pos p) const {
 int Voxels::operator[](Pos p) const {
     if (!isInRange(p)) {
         std::cerr << "tried to get out of range position " << p << std::endl;
-        fail();
+        exit(1);
     }
     return voxels[p.x * width * height + p.y * width + p.z];
 }
@@ -91,7 +95,7 @@ int Voxels::operator[](Pos p) const {
 int &Voxels::operator[](Pos p) {
     if (!isInRange(p)) {
         std::cerr << "tried to get out of range position " << p << std::endl;
-        fail();
+        exit(1);
     }
     return voxels[p.x * width * height + p.y * width + p.z];
 }
@@ -136,7 +140,8 @@ std::ostream &operator<<(std::ostream &os, const Voxels &v) {
 
 double Voxels::accessibilityHeuristic(Pos p, int j) const {
     if (j < 0) {
-        fail("j must not be less than zero");
+        std::cerr << "j must not be less than zero" << std::endl;
+        exit(1);
     }
     const double WEIGHT_FACTOR = 0.1;
     if (j == 0) {
