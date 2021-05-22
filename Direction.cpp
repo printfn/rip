@@ -1,4 +1,5 @@
 #include "Direction.h"
+#include <iostream>
 
 Direction::Direction(Value value) : value{value} {}
 
@@ -6,14 +7,14 @@ Direction::operator Value() const {
     return value;
 }
 
-const char *printDir(Direction d) {
-    switch (d) {
-        case Direction::XP: return "+x";
-        case Direction::XN: return "-x";
-        case Direction::YP: return "+y";
-        case Direction::YN: return "-y";
-        case Direction::ZP: return "+z";
-        case Direction::ZN: return "-z";
+std::ostream &operator<<(std::ostream &os, Direction const &dir) {
+    switch (dir) {
+        case Direction::XP: return os << "+x";
+        case Direction::XN: return os << "-x";
+        case Direction::YP: return os << "+y";
+        case Direction::YN: return os << "-y";
+        case Direction::ZP: return os << "+z";
+        case Direction::ZN: return os << "-z";
     }
 }
 

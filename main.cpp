@@ -7,6 +7,7 @@
 #include <deque>
 #include <unordered_set>
 #include <cstdio>
+#include <iostream>
 
 int numExteriorFaces(const Voxels &v, Pos p) {
     return 6 - v.numNeighboursAt(p);
@@ -188,7 +189,7 @@ int main(int argc, char *argv[]) {
     cube.print(true);
     OrientedPos seed = findInitialSeed(cube, true);
     seed.pos.print("seed");
-    printf("direction: %s\n", printDir(seed.dir));
+    std::cout << "direction: " << seed.dir << std::endl;
     printf("accessibility: j = 0: %f\n", accessibilityHeuristic(cube, seed.pos, 0));
     printf("accessibility: j = 1: %f\n", accessibilityHeuristic(cube, seed.pos, 1));
     printf("accessibility: j = 2: %f\n", accessibilityHeuristic(cube, seed.pos, 2));

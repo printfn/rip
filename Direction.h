@@ -1,6 +1,8 @@
 #ifndef HEADER_DIRECTION
 #define HEADER_DIRECTION
 
+#include <iosfwd>
+
 class Direction {
 public:
     enum Value {
@@ -15,11 +17,12 @@ public:
     // Disallow using Direction in if statements (e.g. if (direction))
     explicit operator bool() = delete;
 
+    friend std::ostream &operator<<(std::ostream &os, Direction const &dir);
+
 private:
     Value value;
 };
 
-const char *printDir(Direction d);
 Direction oppositeDirection(Direction d);
 
 static Direction ALL_DIRECTIONS[6] = {
