@@ -4,6 +4,7 @@
 #include "utils.h"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 Voxels::Voxels(int width, int height, int depth) : width{width}, height{height} {
     for (int i = 0; i < width * height * depth; ++i) {
@@ -17,18 +18,40 @@ Voxels Voxels::readFile(const std::string &filename) {
         std::cerr << "Failed to open file " << filename << ": " << strerror(errno) << std::endl;
         fail();
     }
-
-    Voxels result{5, 3, 7};
-    result[{0, 0, 0}] = 1;
-    result[{0, 0, 1}] = 1;
-    result[{0, 1, 0}] = 1;
-    result[{0, 1, 1}] = 1;
-    result[{0, 1, 2}] = 1;
-    result[{1, 0, 0}] = 1;
-    result[{1, 0, 1}] = 1;
-    result[{1, 1, 0}] = 1;
-    result[{1, 1, 1}] = 1;
-    result[{2, 1, 1}] = 1;
+    std::string line;
+    if (!std::getline(fin, line)) {
+        fail("Failed to read shape dimensions");
+    }
+    std::stringstream strstream{line};
+    int width = 0, height = 0, depth = 0;
+    strstream >> width;
+    strstream >> height;
+    strstream >> depth;
+    Voxels result{width, height, depth};
+    int voxelIdx = 0;
+    while (std::getline(fin, line)) {
+        strstream = std::stringstream{line};
+        char ch = '\0';
+        while (strstream >> ch) {
+            switch (ch) {
+                case '.':
+                    result.voxels[voxelIdx++] = 0;
+                    break;
+                case 'x':
+                    result.voxels[voxelIdx++] = 1;
+                    break;
+                default:
+                    std::cerr << "Unexpected character at voxel index "
+                        << voxelIdx << ": '" << ch << "'" << std::endl;
+                    fail();
+            }
+        }
+    }
+    if (voxelIdx < width * height * depth) {
+        std::cerr << "Expected " << (width * height * depth) << " voxels, "
+            << "found " << voxelIdx << std::endl;
+        fail();
+    }
     return result;
 }
 

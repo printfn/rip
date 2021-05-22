@@ -216,10 +216,6 @@ Voxels initialiseVoxels(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc == 2) {
-        std::cout << "Reading file " << argv[1] << "..." << std::endl;
-
-    }
     auto voxels = initialiseVoxels(argc, argv);
     std::cout << voxels << std::endl;
     OrientedPos seed = findInitialSeed(voxels, true);
