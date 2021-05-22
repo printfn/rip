@@ -3,6 +3,7 @@
 #include "Pos.h"
 #include "utils.h"
 #include <iostream>
+#include <fstream>
 
 Voxels::Voxels(int width, int height, int depth) : width{width}, height{height} {
     for (int i = 0; i < width * height * depth; ++i) {
@@ -10,8 +11,24 @@ Voxels::Voxels(int width, int height, int depth) : width{width}, height{height} 
     }
 }
 
-Voxels Voxels::readFile(const char *filename) {
+Voxels Voxels::readFile(const std::string &filename) {
+    std::ifstream fin{filename};
+    if (!fin) {
+        std::cerr << "Failed to open file " << filename << ": " << strerror(errno) << std::endl;
+        fail();
+    }
+
     Voxels result{5, 3, 7};
+    result[{0, 0, 0}] = 1;
+    result[{0, 0, 1}] = 1;
+    result[{0, 1, 0}] = 1;
+    result[{0, 1, 1}] = 1;
+    result[{0, 1, 2}] = 1;
+    result[{1, 0, 0}] = 1;
+    result[{1, 0, 1}] = 1;
+    result[{1, 1, 0}] = 1;
+    result[{1, 1, 1}] = 1;
+    result[{2, 1, 1}] = 1;
     return result;
 }
 

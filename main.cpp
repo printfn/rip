@@ -207,7 +207,7 @@ Voxels initialiseVoxels(int argc, char *argv[]) {
             return solvedThreeCube();
         case 2:
             std::cout << "Reading file " << argv[1] << "..." << std::endl;
-            return Voxels::readFile(argv[1]);
+            return Voxels::readFile(std::string{argv[1]});
         default:
             std::cout << "Usage: ./puzzles <shape file>" << std::endl;
             std::cout << "Using default shape" << std::endl;

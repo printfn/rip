@@ -14,7 +14,7 @@ class Voxels {
 public:
     Voxels(int width, int height, int depth);
 
-    static Voxels readFile(const char *filename);
+    static Voxels readFile(const std::string &filename);
 
     int maxX() const;
     int maxY() const;
