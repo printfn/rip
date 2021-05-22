@@ -11,6 +11,8 @@ struct Pos {
     Pos nextInDirection(Direction d) const;
     void print(const char *description = nullptr) const;
     bool operator==(const Pos &other) const;
+
+    friend std::ostream& operator<<(std::ostream& os, Pos const &p);
 };
 
 #endif // HEADER_POS

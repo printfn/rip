@@ -3,6 +3,8 @@
 #include <cstdlib>
 
 void fail(const char *message) {
-    fprintf(stderr, "%s\n", message);
+    if (message) {
+        fprintf(stderr, "%s\n", message);
+    }
     abort();
 }

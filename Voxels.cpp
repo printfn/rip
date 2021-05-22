@@ -2,6 +2,7 @@
 #include "Direction.h"
 #include "Pos.h"
 #include "utils.h"
+#include <iostream>
 
 Voxels::Voxels(int width, int height, int depth) : width{width}, height{height} {
     for (int i = 0; i < width * height * depth; ++i) {
@@ -36,14 +37,16 @@ bool Voxels::existsAt(Pos p) const {
 
 int Voxels::operator[](Pos p) const {
     if (!isInRange(p)) {
-        fail("tried to get position that was out of range");
+        std::cerr << "tried to get out of range position " << p << std::endl;
+        fail();
     }
     return voxels[p.x * width * height + p.y * width + p.z];
 }
 
 int &Voxels::operator[](Pos p) {
     if (!isInRange(p)) {
-        fail("tried to get position that was out of range");
+        std::cerr << "tried to get out of range position " << p << std::endl;
+        fail();
     }
     return voxels[p.x * width * height + p.y * width + p.z];
 }
