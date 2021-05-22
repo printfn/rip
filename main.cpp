@@ -12,21 +12,14 @@ void fail(const char *message) {
     abort();
 }
 
-bool exists(const Voxels &v, Pos p) {
-    if (p.x < 0 || p.y < 0 || p.z < 0) return false;
-    if (p.x >= v.maxX() || p.y >= v.maxY() || p.z >= v.maxZ()) return false;
-    int val = v[p];
-    return val != 0;
-}
-
 int numNeighbours(const Voxels &v, Pos p) {
     int num = 0;
-    if (exists(v, p.nextInDirection(Direction::XP))) ++num;
-    if (exists(v, p.nextInDirection(Direction::XN))) ++num;
-    if (exists(v, p.nextInDirection(Direction::YP))) ++num;
-    if (exists(v, p.nextInDirection(Direction::YN))) ++num;
-    if (exists(v, p.nextInDirection(Direction::ZP))) ++num;
-    if (exists(v, p.nextInDirection(Direction::ZN))) ++num;
+    if (v.existsAt(p.nextInDirection(Direction::XP))) ++num;
+    if (v.existsAt(p.nextInDirection(Direction::XN))) ++num;
+    if (v.existsAt(p.nextInDirection(Direction::YP))) ++num;
+    if (v.existsAt(p.nextInDirection(Direction::YN))) ++num;
+    if (v.existsAt(p.nextInDirection(Direction::ZP))) ++num;
+    if (v.existsAt(p.nextInDirection(Direction::ZN))) ++num;
     return num;
 }
 
@@ -37,7 +30,7 @@ int numExteriorFaces(const Voxels &v, Pos p) {
 bool hasFreePassage(const Voxels &v, Pos p, Direction dir) {
     for (int i = 0; i < 50; ++i) {
         p = p.nextInDirection(dir);
-        if (exists(v, p)) return false;
+        if (v.existsAt(p)) return false;
     }
     return true;
 }
@@ -57,7 +50,7 @@ std::vector<OrientedPos> initialSeedCandidates(const Voxels &v, bool debug = fal
         for (int y = 0; y < v.maxX(); ++y) {
             for (int z = 0; z < v.maxX(); ++z) {
                 auto p = Pos(x, y, z);
-                if (!exists(v, p)) {
+                if (!v.existsAt(p)) {
                     continue;
                 }
                 if (numExteriorFaces(v, p) != 2) {
@@ -69,11 +62,11 @@ std::vector<OrientedPos> initialSeedCandidates(const Voxels &v, bool debug = fal
                     continue;
                 }
                 Direction dir;
-                if (!exists(v, p.nextInDirection(Direction::XP))) dir = Direction::XP;
-                if (!exists(v, p.nextInDirection(Direction::XN))) dir = Direction::XN;
-                if (!exists(v, p.nextInDirection(Direction::YN))) dir = Direction::YN;
-                if (!exists(v, p.nextInDirection(Direction::ZP))) dir = Direction::ZP;
-                if (!exists(v, p.nextInDirection(Direction::ZN))) dir = Direction::ZN;
+                if (!v.existsAt(p.nextInDirection(Direction::XP))) dir = Direction::XP;
+                if (!v.existsAt(p.nextInDirection(Direction::XN))) dir = Direction::XN;
+                if (!v.existsAt(p.nextInDirection(Direction::YN))) dir = Direction::YN;
+                if (!v.existsAt(p.nextInDirection(Direction::ZP))) dir = Direction::ZP;
+                if (!v.existsAt(p.nextInDirection(Direction::ZN))) dir = Direction::ZN;
                 results.push_back(OrientedPos(p, dir));
             }
         }
@@ -116,7 +109,7 @@ double accessibilityHeuristic(const Voxels &v, Pos p, int j) {
         auto weight = pow(WEIGHT_FACTOR, (double)j);
         for (auto d : directions()) {
             auto posInD = p.nextInDirection(d);
-            if (!exists(v, posInD)) continue;
+            if (!v.existsAt(posInD)) continue;
             res += weight * accessibilityHeuristic(v, posInD, j - 1);
         }
         return res;
@@ -136,7 +129,7 @@ std::vector<OrientedPair> breadthFirstPairSearch(const Voxels &v, OrientedPos se
         queue.pop_front();
 
         auto otherPosInPair = pos.nextInDirection(oppositeDirection(seed.dir));
-        if (exists(v, pos) && exists(v, otherPosInPair)) {
+        if (v.existsAt(pos) && v.existsAt(otherPosInPair)) {
             OrientedPair result{pos, otherPosInPair};
             results.push_back(result);
         }
@@ -145,7 +138,7 @@ std::vector<OrientedPair> breadthFirstPairSearch(const Voxels &v, OrientedPos se
         for (Direction dir : directions()) {
             auto nextPos = pos.nextInDirection(dir);
             if (nextPos == seed.pos) continue;
-            if (!exists(v, nextPos)) continue;
+            if (!v.existsAt(nextPos)) continue;
             if (std::find(done.begin(), done.end(), nextPos) != done.end()) continue;
             if (std::find(queue.begin(), queue.end(), nextPos) != queue.end()) continue;
             queue.push_back(nextPos);

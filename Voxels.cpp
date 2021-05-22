@@ -13,6 +13,13 @@ int Voxels::maxZ() const {
     return width;
 }
 
+bool Voxels::existsAt(Pos p) const {
+    if (p.x < 0 || p.y < 0 || p.z < 0) return false;
+    if (p.x >= maxX() || p.y >= maxY() || p.z >= maxZ()) return false;
+    int val = (*this)[p];
+    return val != 0;
+}
+
 int Voxels::operator[](Pos p) const {
     return voxels[p.x * width * height + p.y * width + p.z];
 }
