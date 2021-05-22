@@ -116,7 +116,12 @@ std::ostream &operator<<(std::ostream &os, const Voxels &v) {
     for (int x = 0; x < mx; ++x) {
         for (int y = 0; y < my; ++y) {
             for (int z = 0; z < mz; ++z) {
-                os << v[Pos{x, y, z}];
+                int value = v[Pos{x, y, z}];
+                if (value == 0) {
+                    os << '.';
+                } else {
+                    os << value;
+                }
             }
             if (y < my - 1) {
                 os << " ";
