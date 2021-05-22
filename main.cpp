@@ -1,46 +1,13 @@
+#include "Direction.h"
+
 #include <vector>
 #include <deque>
 #include <unordered_set>
 #include <cstdio>
 
-enum class Direction { XP, XN, YP, YN, ZP, ZN };
-
-const char *printDir(Direction d) {
-    switch (d) {
-        case Direction::XP: return "+x";
-        case Direction::XN: return "-x";
-        case Direction::YP: return "+y";
-        case Direction::YN: return "-y";
-        case Direction::ZP: return "+z";
-        case Direction::ZN: return "-z";
-    }
-}
-
-Direction oppositeDirection(Direction d) {
-    switch (d) {
-        case Direction::XP: return Direction::XN;
-        case Direction::XN: return Direction::XP;
-        case Direction::YP: return Direction::YN;
-        case Direction::YN: return Direction::YP;
-        case Direction::ZP: return Direction::ZN;
-        case Direction::ZN: return Direction::ZP;
-    }
-}
-
 void fail(const char *message) {
     fprintf(stderr, "%s\n", message);
     abort();
-}
-
-std::vector<Direction> directions() {
-    return {
-        Direction::XP,
-        Direction::XN,
-        Direction::YP,
-        Direction::YN,
-        Direction::ZP,
-        Direction::ZN,
-    };
 }
 
 struct Pos {

@@ -14,4 +14,5 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 project(puzzles)
 
 add_executable(puzzles
+    Direction.cpp
     main.cpp)
