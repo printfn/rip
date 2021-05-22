@@ -1,5 +1,6 @@
 #include "Direction.h"
 #include "Pos.h"
+#include "Voxels.h"
 
 #include <vector>
 #include <deque>
@@ -9,44 +10,6 @@
 void fail(const char *message) {
     fprintf(stderr, "%s\n", message);
     abort();
-}
-
-struct Voxels {
-    int width = 0;
-    int height = 0;
-    std::vector<int> voxels;
-
-    int maxX() const {
-        return voxels.size() / width / height;
-    }
-    int maxY() const {
-        return height;
-    }
-    int maxZ() const {
-        return width;
-    }
-    int operator[](Pos p) const {
-        return voxels[p.x * width * height + p.y * width + p.z];
-    }
-    int &operator[](Pos p) {
-        return voxels[p.x * width * height + p.y * width + p.z];
-    }
-    void print(bool detailed = false) const;
-};
-
-void Voxels::print(bool detailed) const {
-    printf("Dimensions: %ix%ix%i\n", maxX(), maxY(), maxZ());
-    if (detailed) {
-        for (int x = 0; x < maxX(); ++x) {
-            for (int y = 0; y < maxX(); ++y) {
-                for (int z = 0; z < maxX(); ++z) {
-                    printf("%i", (*this)[Pos(x, y, z)]);
-                }
-                printf("\n");
-            }
-            printf("\n\n");
-        }
-    }
 }
 
 bool exists(const Voxels &v, Pos p) {
