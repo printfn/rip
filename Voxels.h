@@ -17,6 +17,7 @@ public:
     int maxY() const;
     int maxZ() const;
 
+    bool isInRange(Pos p) const;
     bool existsAt(Pos p) const;
 
     int operator[](Pos p) const;

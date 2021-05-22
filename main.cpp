@@ -1,16 +1,12 @@
 #include "Direction.h"
 #include "Pos.h"
 #include "Voxels.h"
+#include "utils.h"
 
 #include <vector>
 #include <deque>
 #include <unordered_set>
 #include <cstdio>
-
-void fail(const char *message) {
-    fprintf(stderr, "%s\n", message);
-    abort();
-}
 
 int numExteriorFaces(const Voxels &v, Pos p) {
     return 6 - v.numNeighboursAt(p);

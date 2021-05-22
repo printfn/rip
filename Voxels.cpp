@@ -1,6 +1,7 @@
 #include "Voxels.h"
 #include "Direction.h"
 #include "Pos.h"
+#include "utils.h"
 
 Voxels::Voxels(int width, int height, int depth) : width{width}, height{height} {
     for (int i = 0; i < width * height * depth; ++i) {
@@ -20,6 +21,12 @@ int Voxels::maxZ() const {
     return width;
 }
 
+bool Voxels::isInRange(Pos p) const {
+    if (p.x < 0 || p.y < 0 || p.z < 0) return false;
+    if (p.x >= maxX() || p.y >= maxY() || p.z >= maxZ()) return false;
+    return true;
+}
+
 bool Voxels::existsAt(Pos p) const {
     if (p.x < 0 || p.y < 0 || p.z < 0) return false;
     if (p.x >= maxX() || p.y >= maxY() || p.z >= maxZ()) return false;
@@ -28,10 +35,16 @@ bool Voxels::existsAt(Pos p) const {
 }
 
 int Voxels::operator[](Pos p) const {
+    if (!isInRange(p)) {
+        fail("tried to get position that was out of range");
+    }
     return voxels[p.x * width * height + p.y * width + p.z];
 }
 
 int &Voxels::operator[](Pos p) {
+    if (!isInRange(p)) {
+        fail("tried to get position that was out of range");
+    }
     return voxels[p.x * width * height + p.y * width + p.z];
 }
 

@@ -17,4 +17,5 @@ add_executable(puzzles
     Direction.cpp
     main.cpp
     Pos.cpp
+    utils.cpp
     Voxels.cpp)
