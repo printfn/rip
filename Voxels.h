@@ -2,6 +2,7 @@
 #define HEADER_VOXELS
 
 #include <vector>
+#include <string>
 
 struct Pos;
 

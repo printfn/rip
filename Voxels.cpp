@@ -1,6 +1,8 @@
 #include "Voxels.h"
 #include "Direction.h"
 #include "Pos.h"
+#include <cmath>
+#include <cstring>
 #include <iostream>
 #include <fstream>
 #include <sstream>

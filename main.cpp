@@ -2,6 +2,7 @@
 #include "Pos.h"
 #include "Voxels.h"
 
+#include <algorithm>
 #include <vector>
 #include <deque>
 #include <unordered_set>
