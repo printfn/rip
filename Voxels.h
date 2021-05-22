@@ -8,9 +8,9 @@ struct Pos;
 class Voxels {
     int width = 0;
     int height = 0;
-public:
     std::vector<int> voxels;
 
+public:
     Voxels(int width, int height, int depth);
 
     int maxX() const;
