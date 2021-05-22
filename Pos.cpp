@@ -20,17 +20,10 @@ Pos Pos::nextInDirection(Direction d) const {
     return res;
 }
 
-void Pos::print(const char *description) const {
-    if (description) {
-        printf("%s: ", description);
-    }
-    printf("(%i,%i,%i)\n", x, y, z);
-}
-
 bool Pos::operator==(const Pos &other) const {
     return x == other.x && y == other.y && z == other.z;
 }
 
 std::ostream &operator<<(std::ostream &os, const Pos &p) {
-    return os << "Pos{" << p.x << ", " << p.y << ", " << p.z << "}" << std::endl;
+    return os << "Pos{" << p.x << ", " << p.y << ", " << p.z << "}";
 }

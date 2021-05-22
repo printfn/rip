@@ -188,7 +188,7 @@ int main(int argc, char *argv[]) {
     auto cube = solvedThreeCube();
     std::cout << cube << std::endl;
     OrientedPos seed = findInitialSeed(cube, true);
-    seed.pos.print("seed");
+    std::cout << "seed: " << seed.pos << std::endl;
     std::cout << "direction: " << seed.dir << std::endl;
     printf("accessibility: j = 0: %f\n", accessibilityHeuristic(cube, seed.pos, 0));
     printf("accessibility: j = 1: %f\n", accessibilityHeuristic(cube, seed.pos, 1));
@@ -196,8 +196,8 @@ int main(int argc, char *argv[]) {
     printf("accessibility: j = 3: %f\n", accessibilityHeuristic(cube, seed.pos, 3));
     auto pairs = inaccessiblePairs(cube, seed);
     for (auto &pair : pairs) {
-        pair.blocking.print("blocking");
-        pair.blockee.print("blockee");
+        std::cout << "blocking: " << pair.blocking << std::endl;
+        std::cout << "blockee:  " << pair.blockee << std::endl;
     }
     return 0;
 }
