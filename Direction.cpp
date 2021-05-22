@@ -1,5 +1,11 @@
 #include "Direction.h"
 
+Direction::Direction(Value value) : value{value} {}
+
+Direction::operator Value() const {
+    return value;
+}
+
 const char *printDir(Direction d) {
     switch (d) {
         case Direction::XP: return "+x";

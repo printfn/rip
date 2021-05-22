@@ -1,7 +1,23 @@
 #ifndef HEADER_DIRECTION
 #define HEADER_DIRECTION
 
-enum class Direction { XP, XN, YP, YN, ZP, ZN };
+class Direction {
+public:
+    enum Value {
+        XP, XN, YP, YN, ZP, ZN
+    };
+
+    Direction(Value value);
+
+    // Allow using Direction in switch statements
+    operator Value() const;
+
+    // Disallow using Direction in if statements (e.g. if (direction))
+    explicit operator bool() = delete;
+
+private:
+    Value value;
+};
 
 const char *printDir(Direction d);
 Direction oppositeDirection(Direction d);

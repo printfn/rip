@@ -46,7 +46,7 @@ std::vector<OrientedPos> initialSeedCandidates(const Voxels &v, bool debug = fal
                     ++skippedDueToNonFreePassage;
                     continue;
                 }
-                Direction dir;
+                Direction dir = Direction::YP;
                 if (!v.existsAt(p.nextInDirection(Direction::XP))) dir = Direction::XP;
                 if (!v.existsAt(p.nextInDirection(Direction::XN))) dir = Direction::XN;
                 if (!v.existsAt(p.nextInDirection(Direction::YN))) dir = Direction::YN;
