@@ -12,19 +12,8 @@ void fail(const char *message) {
     abort();
 }
 
-int numNeighbours(const Voxels &v, Pos p) {
-    int num = 0;
-    if (v.existsAt(p.nextInDirection(Direction::XP))) ++num;
-    if (v.existsAt(p.nextInDirection(Direction::XN))) ++num;
-    if (v.existsAt(p.nextInDirection(Direction::YP))) ++num;
-    if (v.existsAt(p.nextInDirection(Direction::YN))) ++num;
-    if (v.existsAt(p.nextInDirection(Direction::ZP))) ++num;
-    if (v.existsAt(p.nextInDirection(Direction::ZN))) ++num;
-    return num;
-}
-
 int numExteriorFaces(const Voxels &v, Pos p) {
-    return 6 - numNeighbours(v, p);
+    return 6 - v.numNeighboursAt(p);
 }
 
 bool hasFreePassage(const Voxels &v, Pos p, Direction dir) {
@@ -103,7 +92,7 @@ double accessibilityHeuristic(const Voxels &v, Pos p, int j) {
     }
     const double WEIGHT_FACTOR = 0.1;
     if (j == 0) {
-        return numNeighbours(v, p);
+        return v.numNeighboursAt(p);
     } else {
         auto res = accessibilityHeuristic(v, p, j - 1);
         auto weight = pow(WEIGHT_FACTOR, (double)j);

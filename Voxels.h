@@ -19,6 +19,8 @@ struct Voxels {
     int operator[](Pos p) const;
     int &operator[](Pos p);
     void print(bool detailed = false) const;
+
+    int numNeighboursAt(Pos p) const;
 };
 
 #endif // HEADER_VOXELS

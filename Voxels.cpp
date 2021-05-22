@@ -1,4 +1,5 @@
 #include "Voxels.h"
+#include "Direction.h"
 #include "Pos.h"
 
 int Voxels::maxX() const {
@@ -41,4 +42,15 @@ void Voxels::print(bool detailed) const {
             printf("\n\n");
         }
     }
+}
+
+int Voxels::numNeighboursAt(Pos p) const {
+    int num = 0;
+    if (existsAt(p.nextInDirection(Direction::XP))) ++num;
+    if (existsAt(p.nextInDirection(Direction::XN))) ++num;
+    if (existsAt(p.nextInDirection(Direction::YP))) ++num;
+    if (existsAt(p.nextInDirection(Direction::YN))) ++num;
+    if (existsAt(p.nextInDirection(Direction::ZP))) ++num;
+    if (existsAt(p.nextInDirection(Direction::ZN))) ++num;
+    return num;
 }
