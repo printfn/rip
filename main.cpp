@@ -193,8 +193,7 @@ int initGlfw() {
 
     /* Create a windowed mode window and its OpenGL context */
     GLFWwindow *window = glfwCreateWindow(640, 480, "Recursive Interlocking Puzzles", NULL, NULL);
-    if (!window)
-    {
+    if (!window) {
         glfwTerminate();
         return -1;
     }
@@ -204,8 +203,7 @@ int initGlfw() {
     glClearColor( 0.4f, 0.3f, 0.4f, 0.0f );
 
     /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
-    {
+    while (!glfwWindowShouldClose(window)) {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
