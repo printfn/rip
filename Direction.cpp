@@ -21,14 +21,3 @@ Direction oppositeDirection(Direction d) {
         case Direction::ZN: return Direction::ZP;
     }
 }
-
-std::vector<Direction> directions() {
-    return {
-        Direction::XP,
-        Direction::XN,
-        Direction::YP,
-        Direction::YN,
-        Direction::ZP,
-        Direction::ZN,
-    };
-}

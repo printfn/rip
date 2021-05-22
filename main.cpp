@@ -94,7 +94,7 @@ double accessibilityHeuristic(const Voxels &v, Pos p, int j) {
     } else {
         auto res = accessibilityHeuristic(v, p, j - 1);
         auto weight = pow(WEIGHT_FACTOR, (double)j);
-        for (auto d : directions()) {
+        for (auto d : ALL_DIRECTIONS) {
             auto posInD = p.nextInDirection(d);
             if (!v.existsAt(posInD)) continue;
             res += weight * accessibilityHeuristic(v, posInD, j - 1);
@@ -122,7 +122,7 @@ std::vector<OrientedPair> breadthFirstPairSearch(const Voxels &v, OrientedPos se
         }
 
         done.push_back(pos);
-        for (Direction dir : directions()) {
+        for (Direction dir : ALL_DIRECTIONS) {
             auto nextPos = pos.nextInDirection(dir);
             if (nextPos == seed.pos) continue;
             if (!v.existsAt(nextPos)) continue;

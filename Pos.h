@@ -2,6 +2,7 @@
 #define HEADER_POS
 
 #include "Direction.h"
+#include <iosfwd>
 
 struct Pos {
     int x, y, z;
@@ -12,7 +13,7 @@ struct Pos {
     void print(const char *description = nullptr) const;
     bool operator==(const Pos &other) const;
 
-    friend std::ostream& operator<<(std::ostream& os, Pos const &p);
+    friend std::ostream &operator<<(std::ostream &os, Pos const &p);
 };
 
 #endif // HEADER_POS
