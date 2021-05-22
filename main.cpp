@@ -269,9 +269,45 @@ std::vector<OrientedPair> inaccessiblePairs(const Voxels &v, OrientedPos seed) {
     return candidates;
 }
 
+Voxels solvedThreeCube() {
+    Voxels result;
+    result.width = 3;
+    result.height = 3;
+    result.voxels.push_back(1);
+    result.voxels.push_back(1);
+    result.voxels.push_back(1);
+    result.voxels.push_back(2);
+    result.voxels.push_back(1);
+    result.voxels.push_back(2);
+    result.voxels.push_back(2);
+    result.voxels.push_back(1);
+    result.voxels.push_back(2);
+
+    result.voxels.push_back(2);
+    result.voxels.push_back(4);
+    result.voxels.push_back(4);
+    result.voxels.push_back(2);
+    result.voxels.push_back(2);
+    result.voxels.push_back(2);
+    result.voxels.push_back(3);
+    result.voxels.push_back(1);
+    result.voxels.push_back(1);
+
+    result.voxels.push_back(2);
+    result.voxels.push_back(3);
+    result.voxels.push_back(4);
+    result.voxels.push_back(3);
+    result.voxels.push_back(3);
+    result.voxels.push_back(4);
+    result.voxels.push_back(3);
+    result.voxels.push_back(4);
+    result.voxels.push_back(4);
+    return result;
+}
+
 int main(int argc, char *argv[]) {
-    auto cube = makeCube(3);
-    cube.print();
+    auto cube = solvedThreeCube();
+    cube.print(true);
     OrientedPos seed = findInitialSeed(cube, true);
     seed.pos.print("seed");
     printf("direction: %s\n", printDir(seed.dir));
