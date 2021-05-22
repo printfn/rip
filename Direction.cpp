@@ -18,8 +18,8 @@ std::ostream &operator<<(std::ostream &os, Direction const &dir) {
     }
 }
 
-Direction oppositeDirection(Direction d) {
-    switch (d) {
+Direction Direction::opposite() const {
+    switch (*this) {
         case Direction::XP: return Direction::XN;
         case Direction::XN: return Direction::XP;
         case Direction::YP: return Direction::YN;

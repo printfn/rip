@@ -19,11 +19,11 @@ public:
 
     friend std::ostream &operator<<(std::ostream &os, Direction const &dir);
 
+    Direction opposite() const;
+
 private:
     Value value;
 };
-
-Direction oppositeDirection(Direction d);
 
 static Direction ALL_DIRECTIONS[6] = {
     Direction::XP,

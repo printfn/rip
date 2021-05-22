@@ -116,7 +116,7 @@ std::vector<OrientedPair> breadthFirstPairSearch(const Voxels &v, OrientedPos se
         auto pos = queue.front();
         queue.pop_front();
 
-        auto otherPosInPair = pos.nextInDirection(oppositeDirection(seed.dir));
+        auto otherPosInPair = pos.nextInDirection(seed.dir.opposite());
         if (v.existsAt(pos) && v.existsAt(otherPosInPair)) {
             OrientedPair result{pos, otherPosInPair};
             results.push_back(result);
