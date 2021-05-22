@@ -51,21 +51,6 @@ int &Voxels::operator[](Pos p) {
     return voxels[p.x * width * height + p.y * width + p.z];
 }
 
-void Voxels::print(bool detailed) const {
-    printf("Dimensions: %ix%ix%i\n", maxX(), maxY(), maxZ());
-    if (detailed) {
-        for (int x = 0; x < maxX(); ++x) {
-            for (int y = 0; y < maxX(); ++y) {
-                for (int z = 0; z < maxX(); ++z) {
-                    printf("%i", (*this)[Pos(x, y, z)]);
-                }
-                printf("\n");
-            }
-            printf("\n\n");
-        }
-    }
-}
-
 int Voxels::numNeighboursAt(Pos p) const {
     int num = 0;
     if (existsAt(p.nextInDirection(Direction::XP))) ++num;
@@ -75,4 +60,26 @@ int Voxels::numNeighboursAt(Pos p) const {
     if (existsAt(p.nextInDirection(Direction::ZP))) ++num;
     if (existsAt(p.nextInDirection(Direction::ZN))) ++num;
     return num;
+}
+
+std::ostream &operator<<(std::ostream &os, Voxels const &v) {
+    int mx = v.maxX();
+    int my = v.maxY();
+    int mz = v.maxZ();
+
+    os << "Dimensions: " << mx << "x" << my << "x" << mz << std::endl;
+    for (int x = 0; x < mx; ++x) {
+        for (int y = 0; y < my; ++y) {
+            for (int z = 0; z < mz; ++z) {
+                os << v[Pos{x, y, z}];
+            }
+            if (y < my - 1) {
+                os << " ";
+            }
+        }
+        if (x < mx - 1) {
+            os << std::endl;
+        }
+    }
+    return os;
 }

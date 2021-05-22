@@ -25,6 +25,8 @@ public:
     void print(bool detailed = false) const;
 
     int numNeighboursAt(Pos p) const;
+
+    friend std::ostream &operator<<(std::ostream &os, Voxels const &v);
 };
 
 #endif // HEADER_VOXELS
