@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.6)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -16,9 +16,32 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 project(puzzles)
 
-add_executable(puzzles
+# Add OpenGL and GLFW
+find_package(OpenGL REQUIRED)
+include_directories(${OPENGL_INCLUDE_DIRS})
+
+# Don't build docs etc.
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "GLFW lib only")
+set(GLFW_INSTALL OFF CACHE BOOL "GLFW lib only")
+
+add_subdirectory(glfw)
+
+if(MSVC)
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ENTRY:mainCRTStartup")
+endif()
+
+add_executable(puzzles WIN32
     Direction.cpp
     main.cpp
     Pos.cpp
     utils.cpp
     Voxels.cpp)
+
+# Silence macOS OpenGL deprecation warnings
+target_compile_definitions(puzzles PRIVATE GL_SILENCE_DEPRECATION=1)
+
+target_link_libraries(puzzles ${OPENGL_LIBRARIES} glfw)
+
+if(MSVC)
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT puzzles)
+endif()

@@ -9,6 +9,8 @@
 #include <cstdio>
 #include <iostream>
 
+#include <GLFW/glfw3.h>
+
 int numExteriorFaces(const Voxels &v, Pos p) {
     return 6 - v.numNeighboursAt(p);
 }
@@ -184,7 +186,42 @@ Voxels solvedThreeCube() {
     return result;
 }
 
-int main(void) {
+int initGlfw() {
+    /* Initialize the library */
+    if (!glfwInit())
+        return -1;
+
+    /* Create a windowed mode window and its OpenGL context */
+    GLFWwindow *window = glfwCreateWindow(640, 480, "Recursive Interlocking Puzzles", NULL, NULL);
+    if (!window)
+    {
+        glfwTerminate();
+        return -1;
+    }
+
+    /* Make the window's context current */
+    glfwMakeContextCurrent(window);
+    glClearColor( 0.4f, 0.3f, 0.4f, 0.0f );
+
+    /* Loop until the user closes the window */
+    while (!glfwWindowShouldClose(window))
+    {
+        /* Render here */
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        /* Swap front and back buffers */
+        glfwSwapBuffers(window);
+
+        /* Poll for and process events */
+        glfwPollEvents();
+    }
+
+    glfwTerminate();
+    return 1;
+}
+
+int main() {
+    initGlfw();
     auto cube = solvedThreeCube();
     std::cout << cube << std::endl;
     OrientedPos seed = findInitialSeed(cube, true);
