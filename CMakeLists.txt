@@ -9,6 +9,9 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+# enable extra warnings
+add_compile_options(-Wall -Wextra)
+
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 project(puzzles)

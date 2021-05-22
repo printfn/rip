@@ -184,7 +184,7 @@ Voxels solvedThreeCube() {
     return result;
 }
 
-int main(int argc, char *argv[]) {
+int main(void) {
     auto cube = solvedThreeCube();
     std::cout << cube << std::endl;
     OrientedPos seed = findInitialSeed(cube, true);
