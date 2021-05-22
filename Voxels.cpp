@@ -2,6 +2,12 @@
 #include "Direction.h"
 #include "Pos.h"
 
+Voxels::Voxels(int width, int height, int depth) : width{width}, height{height} {
+    for (int i = 0; i < width * height * depth; ++i) {
+        voxels.push_back(0);
+    }
+}
+
 int Voxels::maxX() const {
     return voxels.size() / width / height;
 }

@@ -5,10 +5,13 @@
 
 struct Pos;
 
-struct Voxels {
+class Voxels {
     int width = 0;
     int height = 0;
+public:
     std::vector<int> voxels;
+
+    Voxels(int width, int height, int depth);
 
     int maxX() const;
     int maxY() const;

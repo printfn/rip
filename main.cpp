@@ -77,11 +77,9 @@ OrientedPos findInitialSeed(const Voxels &v, bool debug = false) {
 }
 
 Voxels makeCube(int length) {
-    Voxels result;
-    result.width = length;
-    result.height = length;
+    Voxels result{length, length, length};
     for (int i = 0; i < length * length * length; ++i) {
-        result.voxels.push_back(1);
+        result.voxels[i] = 1;
     }
     return result;
 }
@@ -151,38 +149,37 @@ std::vector<OrientedPair> inaccessiblePairs(const Voxels &v, OrientedPos seed) {
 }
 
 Voxels solvedThreeCube() {
-    Voxels result;
-    result.width = 3;
-    result.height = 3;
-    result.voxels.push_back(1);
-    result.voxels.push_back(1);
-    result.voxels.push_back(1);
-    result.voxels.push_back(2);
-    result.voxels.push_back(1);
-    result.voxels.push_back(2);
-    result.voxels.push_back(2);
-    result.voxels.push_back(1);
-    result.voxels.push_back(2);
+    Voxels result{3, 3, 3};
 
-    result.voxels.push_back(2);
-    result.voxels.push_back(4);
-    result.voxels.push_back(4);
-    result.voxels.push_back(2);
-    result.voxels.push_back(2);
-    result.voxels.push_back(2);
-    result.voxels.push_back(3);
-    result.voxels.push_back(1);
-    result.voxels.push_back(1);
+    result.voxels[0] = 1;
+    result.voxels[1] = 1;
+    result.voxels[2] = 1;
+    result.voxels[3] = 2;
+    result.voxels[4] = 1;
+    result.voxels[5] = 2;
+    result.voxels[6] = 2;
+    result.voxels[7] = 1;
+    result.voxels[8] = 2;
 
-    result.voxels.push_back(2);
-    result.voxels.push_back(3);
-    result.voxels.push_back(4);
-    result.voxels.push_back(3);
-    result.voxels.push_back(3);
-    result.voxels.push_back(4);
-    result.voxels.push_back(3);
-    result.voxels.push_back(4);
-    result.voxels.push_back(4);
+    result.voxels[9] = 2;
+    result.voxels[10] = 4;
+    result.voxels[11] = 4;
+    result.voxels[12] = 2;
+    result.voxels[13] = 2;
+    result.voxels[14] = 2;
+    result.voxels[15] = 3;
+    result.voxels[16] = 1;
+    result.voxels[17] = 1;
+
+    result.voxels[18] = 2;
+    result.voxels[19] = 3;
+    result.voxels[20] = 4;
+    result.voxels[21] = 3;
+    result.voxels[22] = 3;
+    result.voxels[23] = 4;
+    result.voxels[24] = 3;
+    result.voxels[25] = 4;
+    result.voxels[26] = 4;
     return result;
 }
 
