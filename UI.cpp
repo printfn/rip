@@ -9,12 +9,24 @@ struct VertexData {
     float r, g, b;
 };
 
+void addCube(float x, float y, float z, std::vector<VertexData> &data) {
+    data.push_back({ x, y, z, 1, 0, 0 });
+    data.push_back({ x + 1, y, z, 1, 0, 0 });
+    data.push_back({ x, y + 1, z, 1, 0, 0 });
+    data.push_back({ x + 1, y, z, 1, 0, 0 });
+    data.push_back({ x, y + 1, z, 1, 0, 0 });
+    data.push_back({ x + 1, y + 1, z, 1, 0, 0 });
+}
+
 std::vector<VertexData> getVertexData() {
-    return {
+    std::vector<VertexData> vertexData = {
         { -0.6f, -0.4f, 0.f, 1.f, 0.f, 0.f },
         {  0.6f, -0.4f, 0.f, 0.f, 1.f, 0.f },
         {   0.f,  0.6f, 0.f, 0.f, 0.f, 1.f }
     };
+    addCube(0, 0, 0, vertexData);
+
+    return vertexData;
 }
 
 static const char* vertex_shader_text = R"(
@@ -119,13 +131,14 @@ int initGlfw() {
         glClear(GL_COLOR_BUFFER_BIT);
  
         mat4x4_identity(m);
+        mat4x4_translate_in_place(m, 1, 0, 0);
         mat4x4_rotate_Z(m, m, (float) glfwGetTime());
         mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
         mat4x4_mul(mvp, p, m);
  
         glUseProgram(program);
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat *)mvp);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, vertexData.size());
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
