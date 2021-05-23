@@ -6,6 +6,7 @@
 
 #include "linmath.h"
 
+#include <OpenGL/gl.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <vector>
