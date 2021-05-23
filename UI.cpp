@@ -12,6 +12,7 @@
 struct VertexData {
     float x, y, z;
     float r, g, b;
+    float dx, dy, dz; // direction of movement
 };
 
 struct Color {
@@ -23,14 +24,14 @@ void addCube(float x, float y, float z, Color color, std::vector<VertexData> &da
     float g = color.g;
     float b = color.b;
     std::vector<VertexData> vertices = {
-        { x, y, z, r, g, b },
-        { x + 1, y, z, r, g, b },
-        { x, y + 1, z, r, g, b },
-        { x + 1, y + 1, z, r, g, b },
-        { x, y, z + 1, r, g, b },
-        { x + 1, y, z + 1, r, g, b },
-        { x, y + 1, z + 1, r, g, b },
-        { x + 1, y + 1, z + 1, r, g, b },
+        { x, y, z, r, g, b, 1, 0, 0 },
+        { x + 1, y, z, r, g, b, 1, 0, 0 },
+        { x, y + 1, z, r, g, b, 1, 0, 0 },
+        { x + 1, y + 1, z, r, g, b, 1, 0, 0 },
+        { x, y, z + 1, r, g, b, 1, 0, 0 },
+        { x + 1, y, z + 1, r, g, b, 1, 0, 0 },
+        { x, y + 1, z + 1, r, g, b, 1, 0, 0 },
+        { x + 1, y + 1, z + 1, r, g, b, 1, 0, 0 },
     };
     std::vector<int> indices = {
         0, 1, 2, 1, 2, 3, // front
@@ -80,12 +81,14 @@ void getVertexData(std::vector<VertexData> &vertexData, const Voxels &v, float t
 static const char* vertex_shader_text = R"(
 #version 110
 uniform mat4 MVP;
+uniform float fTime;
 attribute vec3 vCol;
 attribute vec3 vPos;
+attribute vec3 vMovement;
 varying vec3 color;
 
 void main() {
-    gl_Position = MVP * vec4(vPos, 1.0);
+    gl_Position = MVP * vec4(vPos + vMovement * fTime, 1.0);
     color = vCol;
 }
 )";
@@ -163,13 +166,18 @@ int initGlfw(const Voxels &voxels) {
     GLint mvp_location = glGetUniformLocation(program, "MVP");
     GLint vpos_location = glGetAttribLocation(program, "vPos");
     GLint vcol_location = glGetAttribLocation(program, "vCol");
- 
+    GLint vmovement_location = glGetAttribLocation(program, "vMovement");
+    GLint time_location = glGetUniformLocation(program, "fTime");
+
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE,
                           sizeof(VertexData), nullptr);
     glEnableVertexAttribArray(vcol_location);
     glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
                           sizeof(VertexData), (void *)(sizeof(float) * 3));
+    glEnableVertexAttribArray(vmovement_location);
+    glVertexAttribPointer(vmovement_location, 3, GL_FLOAT, GL_FALSE,
+                          sizeof(VertexData), (void *)(sizeof(float) * 6));
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window)) {
@@ -194,6 +202,7 @@ int initGlfw(const Voxels &voxels) {
  
         glUseProgram(program);
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat *)mvp);
+        glUniform1f(time_location, glfwGetTime());
         glDrawArrays(GL_TRIANGLES, 0, vertexData.size());
 
         // Swap front and back buffers
