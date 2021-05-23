@@ -34,6 +34,7 @@ add_executable(puzzles WIN32
     Direction.cpp
     main.cpp
     Pos.cpp
+    UI.cpp
     utils.cpp
     Voxels.cpp)
 
