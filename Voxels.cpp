@@ -141,6 +141,21 @@ bool Voxels::hasFreePassage(Pos p, Direction dir, bool checkLowerRank) const {
     return true;
 }
 
+int Voxels::maxPieceIdx() const {
+    int max = 0;
+    for (int x = 0; x < maxX(); ++x) {
+        for (int y = 0; y < maxY(); ++y) {
+            for (int z = 0; z < maxZ(); ++z) {
+                int piece = (*this)[{x, y, z}];
+                if (piece > max) {
+                    max = piece;
+                }
+            }
+        }
+    }
+    return max;
+}
+
 std::ostream &operator<<(std::ostream &os, const Voxels &v) {
     int mx = v.maxX();
     int my = v.maxY();
@@ -244,7 +259,7 @@ const VoxelPiece &Voxels::propertiesForPiece(int piece) const {
     while (piece >= (int)voxelPieceProperties.size()) {
         int idx = (int)voxelPieceProperties.size();
         Direction dir = movableDirection(*this, idx);
-        voxelPieceProperties.push_back(VoxelPiece{idx, 6, dir});
+        voxelPieceProperties.push_back(VoxelPiece{idx, maxPieceIdx(), dir});
     }
     return voxelPieceProperties[piece];
 }

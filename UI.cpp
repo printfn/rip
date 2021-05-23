@@ -200,19 +200,19 @@ int initGlfw(const Voxels &voxels) {
         // Input
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
             if (cameraRotationVertical < deg2rad(90)) {
-                cameraRotationVertical += deg2rad(1);
+                cameraRotationVertical += deg2rad(1.5);
             }
         }
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
             if (cameraRotationVertical > deg2rad(-90)) {
-                cameraRotationVertical -= deg2rad(1);
+                cameraRotationVertical -= deg2rad(1.5);
             }
         }
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            cameraRotationHorizontal += deg2rad(1);
+            cameraRotationHorizontal += deg2rad(1.5);
         }
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-            cameraRotationHorizontal -= deg2rad(1);
+            cameraRotationHorizontal -= deg2rad(1.5);
         }
         if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) {
             // advance time forwards
