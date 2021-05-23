@@ -1,6 +1,8 @@
 #ifndef HEADER_UI
 #define HEADER_UI
 
-int initGlfw();
+class Voxels;
+
+int initGlfw(const Voxels &voxels);
 
 #endif // HEADER_UI

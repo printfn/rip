@@ -1,5 +1,9 @@
-#include "linmath.h"
+#include "UI.h"
 #include "utils.h"
+#include "Voxels.h"
+#include "Pos.h"
+
+#include "linmath.h"
 
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -11,21 +15,45 @@ struct VertexData {
 };
 
 void addCube(float x, float y, float z, std::vector<VertexData> &data) {
-    data.push_back({ x, y, z, 1, 0, 0 });
-    data.push_back({ x + 1, y, z, 1, 0, 0 });
-    data.push_back({ x, y + 1, z, 1, 0, 0 });
-    data.push_back({ x + 1, y, z, 1, 0, 0 });
-    data.push_back({ x, y + 1, z, 1, 0, 0 });
-    data.push_back({ x + 1, y + 1, z, 1, 0, 0 });
+    std::vector<VertexData> vertices = {
+        { x, y, z, 1, 0, 0 },
+        { x + 1, y, z, 1, 0, 0 },
+        { x, y + 1, z, 1, 0, 0 },
+        { x + 1, y + 1, z, 1, 0, 0 },
+        { x, y, z + 1, 1, 0, 0 },
+        { x + 1, y, z + 1, 1, 0, 0 },
+        { x, y + 1, z + 1, 1, 0, 0 },
+        { x + 1, y + 1, z + 1, 1, 0, 0 },
+    };
+    std::vector<int> indices = {
+        0, 1, 2, 1, 2, 3, // front
+        0, 2, 4, 2, 4, 6, // left
+        1, 3, 5, 3, 5, 7, // right
+        0, 1, 4, 1, 4, 5, // bottom
+        2, 3, 6, 3, 6, 7, // top
+        4, 5, 6, 5, 6, 7, // back
+    };
+    for (int i : indices) {
+        data.push_back(vertices[i]);
+    }
 }
 
-std::vector<VertexData> getVertexData() {
+std::vector<VertexData> getVertexData(const Voxels &v) {
     std::vector<VertexData> vertexData = {
         { -0.6f, -0.4f, 0.f, 1.f, 0.f, 0.f },
         {  0.6f, -0.4f, 0.f, 0.f, 1.f, 0.f },
         {   0.f,  0.6f, 0.f, 0.f, 0.f, 1.f }
     };
-    addCube(0, 0, 0, vertexData);
+    vertexData = {};
+    for (int x = 0; x < v.maxX(); ++x) {
+        for (int y = 0; y < v.maxY(); ++y) {
+            for (int z = 0; z < v.maxZ(); ++z) {
+                if (v.existsAt({x, y, z})) {
+                    addCube((float)x, (float)y, (float)z, vertexData);
+                }
+            }
+        }
+    }
 
     return vertexData;
 }
@@ -64,7 +92,7 @@ void error_callback(int error, const char *description) {
     std::cerr << "Error: " << description << " (error code " << error << ")" << std::endl;
 }
 
-int initGlfw() {
+int initGlfw(const Voxels &voxels) {
     // Set error callback, this can happen before GLFW initialisation
     glfwSetErrorCallback(error_callback);
 
@@ -87,7 +115,7 @@ int initGlfw() {
     glfwSwapInterval(1);
     glfwSetKeyCallback(window, key_callback);
 
-    auto vertexData = getVertexData();
+    auto vertexData = getVertexData(voxels);
 
     // Setup
     GLuint vertex_buffer;
@@ -132,7 +160,7 @@ int initGlfw() {
         glClear(GL_COLOR_BUFFER_BIT);
  
         mat4x4_identity(m);
-        mat4x4_translate_in_place(m, 1, 0, -5);
+        mat4x4_translate_in_place(m, 1, 0, -30);
         mat4x4_rotate_Z(m, m, (float) glfwGetTime());
         mat4x4_perspective(p, deg2rad(80), ratio, 1.f, -1.f);
         mat4x4_mul(mvp, p, m);

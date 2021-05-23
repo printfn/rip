@@ -197,6 +197,6 @@ int main(int argc, char *argv[]) {
         std::cout << "blocking: " << pair.blocking << std::endl;
         std::cout << "blockee:  " << pair.blockee << std::endl;
     }
-    initGlfw();
+    initGlfw(voxels);
     return 0;
 }
