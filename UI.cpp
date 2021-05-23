@@ -45,30 +45,36 @@ void addCube(float x, float y, float z, Color color, std::vector<VertexData> &da
     }
 }
 
-std::vector<VertexData> getVertexData(const Voxels &v) {
-    std::vector<VertexData> vertexData = {
-        { -0.6f, -0.4f, 0.f, 1.f, 0.f, 0.f },
-        {  0.6f, -0.4f, 0.f, 0.f, 1.f, 0.f },
-        {   0.f,  0.6f, 0.f, 0.f, 0.f, 1.f }
-    };
-    vertexData = {};
+Color colorForIndex(int i) {
+    switch (i) {
+        case 0:
+            return {1, 0, 0};
+        case 1:
+            return {0, 1, 0};
+        case 2:
+            return {0, 0, 1};
+        case 3:
+            return {1, 1, 0};
+        case 4:
+            return {1, 0, 1};
+        default:
+            return {0, 1, 1};
+    }
+}
+
+void getVertexData(std::vector<VertexData> &vertexData, const Voxels &v, float time) {
+    vertexData.clear();
     for (int x = 0; x < v.maxX(); ++x) {
         for (int y = 0; y < v.maxY(); ++y) {
             for (int z = 0; z < v.maxZ(); ++z) {
                 if (v.existsAt({x, y, z})) {
-                    Color color = {1, 0, 0};
-                    if ((x + y + z) % 3 == 1) {
-                        color = {0, 1, 0};
-                    } else if ((x + y + z) % 3 == 2) {
-                        color = {0, 0, 1};
-                    }
-                    addCube((float)x, (float)y, (float)z, color, vertexData);
+                    Color color = colorForIndex((x + y + z) % 6);
+                    //color = colorForIndex(v[{x, y, z}]);
+                    addCube((float)x, (float)y, (float)z - time, color, vertexData);
                 }
             }
         }
     }
-
-    return vertexData;
 }
 
 static const char* vertex_shader_text = R"(
@@ -131,7 +137,8 @@ int initGlfw(const Voxels &voxels) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    auto vertexData = getVertexData(voxels);
+    std::vector<VertexData> vertexData;
+    getVertexData(vertexData, voxels, 0.f);
 
     // Setup
     GLuint vertex_buffer;
@@ -175,10 +182,13 @@ int initGlfw(const Voxels &voxels) {
 
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        getVertexData(vertexData, voxels, glfwGetTime());
  
         mat4x4_identity(m);
+        mat4x4_translate_in_place(m, -(float)voxels.maxX() / 2, -(float)voxels.maxY() / 2, -(float)voxels.maxZ() / 2);
         mat4x4_translate_in_place(m, 0, 0, -15);
-        mat4x4_rotate_X(m, m, (float) glfwGetTime());
+        mat4x4_rotate_X(m, m, (float)glfwGetTime());
         mat4x4_perspective(p, deg2rad(80), ratio, 1.f, -1.f);
         mat4x4_mul(mvp, p, m);
  
