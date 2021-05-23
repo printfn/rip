@@ -13,6 +13,7 @@ struct VertexData {
     float x, y, z;
     float r, g, b;
     float dx, dy, dz; // direction of movement
+    float movementStart;
 };
 
 struct Color {
@@ -24,14 +25,14 @@ void addCube(float x, float y, float z, Color color, std::vector<VertexData> &da
     float g = color.g;
     float b = color.b;
     std::vector<VertexData> vertices = {
-        { x, y, z, r, g, b, 1, 0, 0 },
-        { x + 1, y, z, r, g, b, 1, 0, 0 },
-        { x, y + 1, z, r, g, b, 1, 0, 0 },
-        { x + 1, y + 1, z, r, g, b, 1, 0, 0 },
-        { x, y, z + 1, r, g, b, 1, 0, 0 },
-        { x + 1, y, z + 1, r, g, b, 1, 0, 0 },
-        { x, y + 1, z + 1, r, g, b, 1, 0, 0 },
-        { x + 1, y + 1, z + 1, r, g, b, 1, 0, 0 },
+        { x, y, z, r, g, b, 1, 0, 0, 1 },
+        { x + 1, y, z, r, g, b, 1, 0, 0, 1 },
+        { x, y + 1, z, r, g, b, 1, 0, 0, 1 },
+        { x + 1, y + 1, z, r, g, b, 1, 0, 0, 1 },
+        { x, y, z + 1, r, g, b, 1, 0, 0, 1 },
+        { x + 1, y, z + 1, r, g, b, 1, 0, 0, 1 },
+        { x, y + 1, z + 1, r, g, b, 1, 0, 0, 1 },
+        { x + 1, y + 1, z + 1, r, g, b, 1, 0, 0, 1 },
     };
     std::vector<int> indices = {
         0, 1, 2, 1, 2, 3, // front
@@ -79,22 +80,22 @@ void getVertexData(std::vector<VertexData> &vertexData, const Voxels &v, float t
 }
 
 static const char* vertex_shader_text = R"(
-#version 110
 uniform mat4 MVP;
 uniform float fTime;
 attribute vec3 vCol;
 attribute vec3 vPos;
 attribute vec3 vMovement;
+attribute float fMovementStart;
 varying vec3 color;
 
 void main() {
-    gl_Position = MVP * vec4(vPos + vMovement * fTime, 1.0);
+    float movementTime = max(0.0, fTime - fMovementStart);
+    gl_Position = MVP * vec4(vPos + vMovement * movementTime, 1.0);
     color = vCol;
 }
 )";
  
 static const char* fragment_shader_text = R"(
-#version 110
 varying vec3 color;
 
 void main() {
@@ -112,6 +113,26 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 void error_callback(int error, const char *description) {
     std::cerr << "Error: " << description << " (error code " << error << ")" << std::endl;
+}
+
+void checkShader(GLuint shader) {
+    GLint isCompiled = 0;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
+    if (isCompiled != GL_FALSE) {
+        return;
+    }
+    std::cerr << "Failed to compile vertex shader:" << std::endl;
+
+    GLint maxLength = 0;
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+
+    std::vector<GLchar> errorLog(maxLength);
+    glGetShaderInfoLog(shader, maxLength, &maxLength, &errorLog[0]);
+
+    std::string errorMessage{errorLog.begin(), errorLog.end()};
+    std::cerr << errorMessage << std::endl;
+
+    exit(1);
 }
 
 int initGlfw(const Voxels &voxels) {
@@ -153,10 +174,12 @@ int initGlfw(const Voxels &voxels) {
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
     glCompileShader(vertex_shader);
+    checkShader(vertex_shader);
  
     GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment_shader, 1, &fragment_shader_text, NULL);
     glCompileShader(fragment_shader);
+    checkShader(fragment_shader);
  
     GLuint program = glCreateProgram();
     glAttachShader(program, vertex_shader);
@@ -167,6 +190,9 @@ int initGlfw(const Voxels &voxels) {
     GLint vpos_location = glGetAttribLocation(program, "vPos");
     GLint vcol_location = glGetAttribLocation(program, "vCol");
     GLint vmovement_location = glGetAttribLocation(program, "vMovement");
+    GLint fmovementstart_location = glGetAttribLocation(program, "fMovementStart");
+    std::cerr << "Loc: " << vmovement_location << std::endl;
+    std::cerr << "Loc: " << fmovementstart_location << std::endl;
     GLint time_location = glGetUniformLocation(program, "fTime");
 
     glEnableVertexAttribArray(vpos_location);
@@ -178,6 +204,9 @@ int initGlfw(const Voxels &voxels) {
     glEnableVertexAttribArray(vmovement_location);
     glVertexAttribPointer(vmovement_location, 3, GL_FLOAT, GL_FALSE,
                           sizeof(VertexData), (void *)(sizeof(float) * 6));
+    glEnableVertexAttribArray(fmovementstart_location);
+    glVertexAttribPointer(fmovementstart_location, 1, GL_FLOAT, GL_FALSE,
+                          sizeof(VertexData), (void *)(sizeof(float) * 9));
 
     float cameraRotationHorizontal = 0;
     float cameraRotationVertical = 0;
