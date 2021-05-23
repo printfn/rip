@@ -124,7 +124,7 @@ int initGlfw(const Voxels &voxels) {
 
     // Make the window's context current
     glfwMakeContextCurrent(window);
-    glClearColor(0.4f, 0.3f, 0.4f, 0.0f);
+    glClearColor(0.4f, 0.8f, 0.9f, 0.0f);
     glfwSwapInterval(1);
     glfwSetKeyCallback(window, key_callback);
 
@@ -137,7 +137,8 @@ int initGlfw(const Voxels &voxels) {
     GLuint vertex_buffer;
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(VertexData) * vertexData.size(), &vertexData[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(VertexData) * vertexData.size(),
+        &vertexData[0], GL_STATIC_DRAW);
  
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
@@ -176,7 +177,7 @@ int initGlfw(const Voxels &voxels) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  
         mat4x4_identity(m);
-        mat4x4_translate_in_place(m, 1, 0, -30);
+        mat4x4_translate_in_place(m, 0, 0, -15);
         mat4x4_rotate_X(m, m, (float) glfwGetTime());
         mat4x4_perspective(p, deg2rad(80), ratio, 1.f, -1.f);
         mat4x4_mul(mvp, p, m);
