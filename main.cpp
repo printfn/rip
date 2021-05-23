@@ -10,18 +10,6 @@
 #include <cstdio>
 #include <iostream>
 
-int numExteriorFaces(const Voxels &v, Pos p) {
-    return 6 - v.numNeighboursAt(p);
-}
-
-bool hasFreePassage(const Voxels &v, Pos p, Direction dir) {
-    for (int i = 0; i < 50; ++i) {
-        p = p.nextInDirection(dir);
-        if (v.existsAt(p)) return false;
-    }
-    return true;
-}
-
 struct OrientedPos {
     Pos pos;
     Direction dir; // direction in which no cube exists
@@ -40,11 +28,11 @@ std::vector<OrientedPos> initialSeedCandidates(const Voxels &v, bool debug = fal
                 if (!v.existsAt(p)) {
                     continue;
                 }
-                if (numExteriorFaces(v, p) != 2) {
+                if (v.numExteriorFaces(p) != 2) {
                     ++skippedDueToWrongFaceCount;
                     continue;
                 }
-                if (!hasFreePassage(v, p, Direction::YP)) {
+                if (!v.hasFreePassage(p, Direction::YP, false)) {
                     ++skippedDueToNonFreePassage;
                     continue;
                 }
@@ -138,10 +126,10 @@ Voxels solvedThreeCube() {
     result[{0, 0, 0}] = 1;
     result[{0, 0, 1}] = 1;
     result[{0, 0, 2}] = 1;
-    result[{0, 1, 0}] = 2;
+    result[{0, 1, 0}] = 3;
     result[{0, 1, 1}] = 1;
     result[{0, 1, 2}] = 2;
-    result[{0, 2, 0}] = 2;
+    result[{0, 2, 0}] = 3;
     result[{0, 2, 1}] = 1;
     result[{0, 2, 2}] = 2;
 

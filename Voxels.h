@@ -32,6 +32,8 @@ public:
     void print(bool detailed = false) const;
 
     int numNeighboursAt(Pos p) const;
+    int numExteriorFaces(Pos p) const;
+    bool hasFreePassage(Pos p, Direction dir, bool checkLowerRank) const;
 
     double accessibilityHeuristic(Pos p, int j) const;
     void invalidateAccessibilityHeuristic() const;

@@ -35,7 +35,7 @@ void setColorForIndex(VoxelPiece &piece, int i) {
     }
 }
 
-VoxelPiece::VoxelPiece(int pieceIdx, Direction dir) {
+VoxelPiece::VoxelPiece(int pieceIdx, int numPieces, Direction dir) {
     setColorForIndex(*this, pieceIdx);
     switch (dir) {
         case Direction::XP: dx = 1; dy = 0; dz = 0; break;
@@ -45,5 +45,5 @@ VoxelPiece::VoxelPiece(int pieceIdx, Direction dir) {
         case Direction::ZP: dx = 0; dy = 0; dz = 1; break;
         case Direction::ZN: dx = 0; dy = 0; dz = -1; break;
     }
-    movementStart = pieceIdx * 5;
+    movementStart = (numPieces - pieceIdx) * 15;
 }

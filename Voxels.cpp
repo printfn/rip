@@ -3,6 +3,7 @@
 #include "Pos.h"
 #include "VoxelPiece.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <iostream>
@@ -120,6 +121,26 @@ int Voxels::numNeighboursAt(Pos p) const {
     return num;
 }
 
+int Voxels::numExteriorFaces(Pos p) const {
+    return 6 - numNeighboursAt(p);
+}
+
+bool Voxels::hasFreePassage(Pos p, Direction dir, bool checkLowerRank) const {
+    int maxI = std::max(maxX(), std::max(maxY(), maxZ()));
+    int pieceIndex = (*this)[p];
+    for (int i = 0; i < maxI; ++i) {
+        p = p.nextInDirection(dir);
+        if (!existsAt(p)) continue;
+        if (!checkLowerRank) return false;
+        // pieces are removed starting with the lowest rank, so if the
+        // potentially blocking piece is lower than the current piece (`pieceIndex`),
+        // we can ignore it
+        if (pieceIndex <= (*this)[p]) continue;
+        return false;
+    }
+    return true;
+}
+
 std::ostream &operator<<(std::ostream &os, const Voxels &v) {
     int mx = v.maxX();
     int my = v.maxY();
@@ -172,10 +193,49 @@ void Voxels::invalidateAccessibilityHeuristic() const {
     accessibilityCache = {};
 }
 
+Direction movableDirection(const Voxels &v, int piece) {
+    bool isXPBlocked = false;
+    bool isXNBlocked = false;
+    bool isYPBlocked = false;
+    bool isYNBlocked = false;
+    bool isZPBlocked = false;
+    bool isZNBlocked = false;
+    for (int x = 0; x < v.maxX(); ++x) {
+        for (int y = 0; y < v.maxY(); ++y) {
+            for (int z = 0; z < v.maxZ(); ++z) {
+                Pos p = {x, y, z};
+                if (v[p] != piece) continue;
+                for (Direction d : ALL_DIRECTIONS) {
+                    if (!v.hasFreePassage(p, d, true)) {
+                        //std::cerr << "Piece at pos " << p << " can't move in direction " << d << std::endl;
+                        switch (d) {
+                            case Direction::XP: isXPBlocked = true; break;
+                            case Direction::XN: isXNBlocked = true; break;
+                            case Direction::YP: isYPBlocked = true; break;
+                            case Direction::YN: isYNBlocked = true; break;
+                            case Direction::ZP: isZPBlocked = true; break;
+                            case Direction::ZN: isZNBlocked = true; break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (!isXPBlocked) return Direction::XP;
+    if (!isXNBlocked) return Direction::XN;
+    if (!isYPBlocked) return Direction::YP;
+    if (!isYNBlocked) return Direction::YN;
+    if (!isZPBlocked) return Direction::ZP;
+    if (!isZNBlocked) return Direction::ZN;
+    std::cerr << "Piece is blocked in all directions!" << std::endl;
+    return Direction::ZN;
+}
+
 VoxelPiece &Voxels::propertiesForPiece(int piece) {
     while (piece >= (int)voxelPieceProperties.size()) {
         int idx = (int)voxelPieceProperties.size();
-        voxelPieceProperties.push_back(VoxelPiece{idx, Direction::ZN});
+        Direction dir = movableDirection(*this, idx);
+        voxelPieceProperties.push_back(VoxelPiece{idx, 6, dir});
     }
     return voxelPieceProperties[piece];
 }
@@ -183,7 +243,8 @@ VoxelPiece &Voxels::propertiesForPiece(int piece) {
 const VoxelPiece &Voxels::propertiesForPiece(int piece) const {
     while (piece >= (int)voxelPieceProperties.size()) {
         int idx = (int)voxelPieceProperties.size();
-        voxelPieceProperties.push_back(VoxelPiece{idx, Direction::ZN});
+        Direction dir = movableDirection(*this, idx);
+        voxelPieceProperties.push_back(VoxelPiece{idx, 6, dir});
     }
     return voxelPieceProperties[piece];
 }

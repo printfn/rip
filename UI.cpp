@@ -54,8 +54,8 @@ void getVertexData(std::vector<VertexData> &vertexData, const Voxels &v, float t
         for (int y = 0; y < v.maxY(); ++y) {
             for (int z = 0; z < v.maxZ(); ++z) {
                 if (v.existsAt({x, y, z})) {
-                    int pieceIndex = (x + y + z) % 6;
-                    //pieceIndex = v[{x, y, z}];
+                    //int pieceIndex = (x + y + z) % 6;
+                    int pieceIndex = v[{x, y, z}];
                     VoxelPiece properties = v.propertiesForPiece(pieceIndex);
                     addCube((float)x, (float)y, (float)z - time, properties, vertexData);
                 }

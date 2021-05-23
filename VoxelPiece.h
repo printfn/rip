@@ -8,7 +8,7 @@ struct VoxelPiece {
     float dx, dy, dz;
     float movementStart;
 
-    VoxelPiece(int pieceIdx, Direction dir);
+    VoxelPiece(int pieceIdx, int numPieces, Direction dir);
 };
 
 #endif // HEADER_VOXEL_PIECE
