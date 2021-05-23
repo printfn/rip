@@ -4,23 +4,23 @@
 #include <iostream>
 
 static const struct {
-    float x, y;
+    float x, y, z;
     float r, g, b;
 } vertices[3] = {
-    { -0.6f, -0.4f, 1.f, 0.f, 0.f },
-    {  0.6f, -0.4f, 0.f, 1.f, 0.f },
-    {   0.f,  0.6f, 0.f, 0.f, 1.f }
+    { -0.6f, -0.4f, 0.f, 1.f, 0.f, 0.f },
+    {  0.6f, -0.4f, 0.f, 0.f, 1.f, 0.f },
+    {   0.f,  0.6f, 0.f, 0.f, 0.f, 1.f }
 };
 
 static const char* vertex_shader_text = R"(
 #version 110
 uniform mat4 MVP;
 attribute vec3 vCol;
-attribute vec2 vPos;
+attribute vec3 vPos;
 varying vec3 color;
 
 void main() {
-    gl_Position = MVP * vec4(vPos, 0.0, 1.0);
+    gl_Position = MVP * vec4(vPos, 1.0);
     color = vCol;
 }
 )";
@@ -93,11 +93,11 @@ int initGlfw() {
     GLint vcol_location = glGetAttribLocation(program, "vCol");
  
     glEnableVertexAttribArray(vpos_location);
-    glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE,
+    glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE,
                           sizeof(vertices[0]), nullptr);
     glEnableVertexAttribArray(vcol_location);
     glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
-                          sizeof(vertices[0]), (void *)(sizeof(float) * 2));
+                          sizeof(vertices[0]), (void *)(sizeof(float) * 3));
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window)) {
