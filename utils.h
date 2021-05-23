@@ -1,6 +1,6 @@
 #ifndef HEADER_UTILS
 #define HEADER_UTILS
 
-void fail(const char *message = nullptr);
+float deg2rad(float degrees);
 
 #endif // HEADER_UTILS

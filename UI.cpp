@@ -1,4 +1,5 @@
 #include "linmath.h"
+#include "utils.h"
 
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -131,9 +132,9 @@ int initGlfw() {
         glClear(GL_COLOR_BUFFER_BIT);
  
         mat4x4_identity(m);
-        mat4x4_translate_in_place(m, 1, 0, 0);
+        mat4x4_translate_in_place(m, 1, 0, -5);
         mat4x4_rotate_Z(m, m, (float) glfwGetTime());
-        mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
+        mat4x4_perspective(p, deg2rad(80), ratio, 1.f, -1.f);
         mat4x4_mul(mvp, p, m);
  
         glUseProgram(program);
