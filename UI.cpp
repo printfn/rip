@@ -213,12 +213,15 @@ int initGlfw(const Voxels &voxels) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  
         mat4x4_identity(m);
-        mat4x4_translate_in_place(m, -(float)voxels.maxX() / 2, -(float)voxels.maxY() / 2, -(float)voxels.maxZ() / 2);
-        mat4x4_translate_in_place(m, 0, 0, -15);
 
         // camera rotation
+        mat4x4_translate_in_place(m, 0, 0, -15);
+        
         mat4x4_rotate_X(m, m, cameraRotationVertical);
         mat4x4_rotate_Y(m, m, cameraRotationHorizontal);
+
+        mat4x4_translate_in_place(m, -(float)voxels.maxX() / 2, -(float)voxels.maxY() / 2, -(float)voxels.maxZ() / 2);
+
         mat4x4_perspective(p, deg2rad(80), ratio, 1.f, -1.f);
         mat4x4_mul(mvp, p, m);
  
