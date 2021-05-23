@@ -2,15 +2,20 @@
 
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <vector>
 
-static const struct {
+struct VertexData {
     float x, y, z;
     float r, g, b;
-} vertices[3] = {
-    { -0.6f, -0.4f, 0.f, 1.f, 0.f, 0.f },
-    {  0.6f, -0.4f, 0.f, 0.f, 1.f, 0.f },
-    {   0.f,  0.6f, 0.f, 0.f, 0.f, 1.f }
 };
+
+std::vector<VertexData> getVertexData() {
+    return {
+        { -0.6f, -0.4f, 0.f, 1.f, 0.f, 0.f },
+        {  0.6f, -0.4f, 0.f, 0.f, 1.f, 0.f },
+        {   0.f,  0.6f, 0.f, 0.f, 0.f, 1.f }
+    };
+}
 
 static const char* vertex_shader_text = R"(
 #version 110
@@ -69,11 +74,13 @@ int initGlfw() {
     glfwSwapInterval(1);
     glfwSetKeyCallback(window, key_callback);
 
+    auto vertexData = getVertexData();
+
     // Setup
     GLuint vertex_buffer;
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(VertexData) * vertexData.size(), &vertexData[0], GL_STATIC_DRAW);
  
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
@@ -94,10 +101,10 @@ int initGlfw() {
  
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE,
-                          sizeof(vertices[0]), nullptr);
+                          sizeof(VertexData), nullptr);
     glEnableVertexAttribArray(vcol_location);
     glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
-                          sizeof(vertices[0]), (void *)(sizeof(float) * 3));
+                          sizeof(VertexData), (void *)(sizeof(float) * 3));
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window)) {
