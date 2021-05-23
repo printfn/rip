@@ -36,6 +36,7 @@ add_executable(puzzles WIN32
     Pos.cpp
     UI.cpp
     utils.cpp
+    VoxelPiece.cpp
     Voxels.cpp)
 
 # Silence macOS OpenGL deprecation warnings

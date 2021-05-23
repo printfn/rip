@@ -1,6 +1,8 @@
 #include "Voxels.h"
 #include "Direction.h"
 #include "Pos.h"
+#include "VoxelPiece.h"
+
 #include <cmath>
 #include <cstring>
 #include <iostream>
@@ -168,4 +170,20 @@ double Voxels::accessibilityHeuristic(Pos p, int j) const {
 
 void Voxels::invalidateAccessibilityHeuristic() const {
     accessibilityCache = {};
+}
+
+VoxelPiece &Voxels::propertiesForPiece(int piece) {
+    while (piece >= (int)voxelPieceProperties.size()) {
+        int idx = (int)voxelPieceProperties.size();
+        voxelPieceProperties.push_back(VoxelPiece{idx, Direction::ZN});
+    }
+    return voxelPieceProperties[piece];
+}
+
+const VoxelPiece &Voxels::propertiesForPiece(int piece) const {
+    while (piece >= (int)voxelPieceProperties.size()) {
+        int idx = (int)voxelPieceProperties.size();
+        voxelPieceProperties.push_back(VoxelPiece{idx, Direction::ZN});
+    }
+    return voxelPieceProperties[piece];
 }

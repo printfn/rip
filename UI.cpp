@@ -1,7 +1,8 @@
 #include "UI.h"
-#include "utils.h"
-#include "Voxels.h"
 #include "Pos.h"
+#include "utils.h"
+#include "VoxelPiece.h"
+#include "Voxels.h"
 
 #include "linmath.h"
 
@@ -20,19 +21,19 @@ struct Color {
     float r, g, b;
 };
 
-void addCube(float x, float y, float z, Color color, std::vector<VertexData> &data) {
-    float r = color.r;
-    float g = color.g;
-    float b = color.b;
+void addCube(float x, float y, float z, VoxelPiece piece, std::vector<VertexData> &data) {
+    float r = piece.r;
+    float g = piece.g;
+    float b = piece.b;
     std::vector<VertexData> vertices = {
-        { x, y, z, r, g, b, 1, 0, 0, 1 },
-        { x + 1, y, z, r, g, b, 1, 0, 0, 1 },
-        { x, y + 1, z, r, g, b, 1, 0, 0, 1 },
-        { x + 1, y + 1, z, r, g, b, 1, 0, 0, 1 },
-        { x, y, z + 1, r, g, b, 1, 0, 0, 1 },
-        { x + 1, y, z + 1, r, g, b, 1, 0, 0, 1 },
-        { x, y + 1, z + 1, r, g, b, 1, 0, 0, 1 },
-        { x + 1, y + 1, z + 1, r, g, b, 1, 0, 0, 1 },
+        { x, y, z, r, g, b, piece.dx, piece.dy, piece.dz, piece.movementStart },
+        { x + 1, y, z, r, g, b, piece.dx, piece.dy, piece.dz, piece.movementStart },
+        { x, y + 1, z, r, g, b, piece.dx, piece.dy, piece.dz, piece.movementStart },
+        { x + 1, y + 1, z, r, g, b, piece.dx, piece.dy, piece.dz, piece.movementStart },
+        { x, y, z + 1, r, g, b, piece.dx, piece.dy, piece.dz, piece.movementStart },
+        { x + 1, y, z + 1, r, g, b, piece.dx, piece.dy, piece.dz, piece.movementStart },
+        { x, y + 1, z + 1, r, g, b, piece.dx, piece.dy, piece.dz, piece.movementStart },
+        { x + 1, y + 1, z + 1, r, g, b, piece.dx, piece.dy, piece.dz, piece.movementStart },
     };
     std::vector<int> indices = {
         0, 1, 2, 1, 2, 3, // front
@@ -47,32 +48,16 @@ void addCube(float x, float y, float z, Color color, std::vector<VertexData> &da
     }
 }
 
-Color colorForIndex(int i) {
-    switch (i) {
-        case 0:
-            return {1, 0, 0};
-        case 1:
-            return {0, 1, 0};
-        case 2:
-            return {0, 0, 1};
-        case 3:
-            return {1, 1, 0};
-        case 4:
-            return {1, 0, 1};
-        default:
-            return {0, 1, 1};
-    }
-}
-
 void getVertexData(std::vector<VertexData> &vertexData, const Voxels &v, float time) {
     vertexData.clear();
     for (int x = 0; x < v.maxX(); ++x) {
         for (int y = 0; y < v.maxY(); ++y) {
             for (int z = 0; z < v.maxZ(); ++z) {
                 if (v.existsAt({x, y, z})) {
-                    Color color = colorForIndex((x + y + z) % 6);
-                    //color = colorForIndex(v[{x, y, z}]);
-                    addCube((float)x, (float)y, (float)z - time, color, vertexData);
+                    int pieceIndex = (x + y + z) % 6;
+                    //pieceIndex = v[{x, y, z}];
+                    VoxelPiece properties = v.propertiesForPiece(pieceIndex);
+                    addCube((float)x, (float)y, (float)z - time, properties, vertexData);
                 }
             }
         }
@@ -191,8 +176,6 @@ int initGlfw(const Voxels &voxels) {
     GLint vcol_location = glGetAttribLocation(program, "vCol");
     GLint vmovement_location = glGetAttribLocation(program, "vMovement");
     GLint fmovementstart_location = glGetAttribLocation(program, "fMovementStart");
-    std::cerr << "Loc: " << vmovement_location << std::endl;
-    std::cerr << "Loc: " << fmovementstart_location << std::endl;
     GLint time_location = glGetUniformLocation(program, "fTime");
 
     glEnableVertexAttribArray(vpos_location);

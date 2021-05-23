@@ -1,6 +1,8 @@
 #ifndef HEADER_VOXELS
 #define HEADER_VOXELS
 
+#include "VoxelPiece.h"
+
 #include <vector>
 #include <string>
 
@@ -11,6 +13,7 @@ class Voxels {
     int height = 0;
     std::vector<int> voxels;
     mutable std::vector<std::vector<double>> accessibilityCache;
+    mutable std::vector<VoxelPiece> voxelPieceProperties;
 
 public:
     Voxels(int width, int height, int depth);
@@ -32,6 +35,9 @@ public:
 
     double accessibilityHeuristic(Pos p, int j) const;
     void invalidateAccessibilityHeuristic() const;
+
+    VoxelPiece &propertiesForPiece(int piece);
+    const VoxelPiece &propertiesForPiece(int piece) const;
 
     friend std::ostream &operator<<(std::ostream &os, const Voxels &v);
 };
