@@ -181,6 +181,7 @@ int initGlfw(const Voxels &voxels) {
 
     float cameraRotationHorizontal = 0;
     float cameraRotationVertical = 0;
+    float cameraTime = 0;
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window)) {
@@ -200,6 +201,17 @@ int initGlfw(const Voxels &voxels) {
         }
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
             cameraRotationHorizontal -= deg2rad(1);
+        }
+        if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) {
+            // advance time forwards
+            cameraTime -= 0.1;
+            if (cameraTime < 0) {
+                cameraTime = 0;
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+            // move time backwards
+            cameraTime += 0.1;
         }
 
         // Rendering
@@ -230,7 +242,7 @@ int initGlfw(const Voxels &voxels) {
  
         glUseProgram(program);
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat *)mvp);
-        //glUniform1f(time_location, glfwGetTime());
+        glUniform1f(time_location, cameraTime);
         glDrawArrays(GL_TRIANGLES, 0, vertexData.size());
 
         // Swap front and back buffers
