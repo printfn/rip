@@ -14,16 +14,23 @@ struct VertexData {
     float r, g, b;
 };
 
-void addCube(float x, float y, float z, std::vector<VertexData> &data) {
+struct Color {
+    float r, g, b;
+};
+
+void addCube(float x, float y, float z, Color color, std::vector<VertexData> &data) {
+    float r = color.r;
+    float g = color.g;
+    float b = color.b;
     std::vector<VertexData> vertices = {
-        { x, y, z, 1, 0, 0 },
-        { x + 1, y, z, 1, 0, 0 },
-        { x, y + 1, z, 1, 0, 0 },
-        { x + 1, y + 1, z, 1, 0, 0 },
-        { x, y, z + 1, 1, 0, 0 },
-        { x + 1, y, z + 1, 1, 0, 0 },
-        { x, y + 1, z + 1, 1, 0, 0 },
-        { x + 1, y + 1, z + 1, 1, 0, 0 },
+        { x, y, z, r, g, b },
+        { x + 1, y, z, r, g, b },
+        { x, y + 1, z, r, g, b },
+        { x + 1, y + 1, z, r, g, b },
+        { x, y, z + 1, r, g, b },
+        { x + 1, y, z + 1, r, g, b },
+        { x, y + 1, z + 1, r, g, b },
+        { x + 1, y + 1, z + 1, r, g, b },
     };
     std::vector<int> indices = {
         0, 1, 2, 1, 2, 3, // front
@@ -49,7 +56,13 @@ std::vector<VertexData> getVertexData(const Voxels &v) {
         for (int y = 0; y < v.maxY(); ++y) {
             for (int z = 0; z < v.maxZ(); ++z) {
                 if (v.existsAt({x, y, z})) {
-                    addCube((float)x, (float)y, (float)z, vertexData);
+                    Color color = {1, 0, 0};
+                    if ((x + y + z) % 3 == 1) {
+                        color = {0, 1, 0};
+                    } else if ((x + y + z) % 3 == 2) {
+                        color = {0, 0, 1};
+                    }
+                    addCube((float)x, (float)y, (float)z, color, vertexData);
                 }
             }
         }
@@ -115,6 +128,9 @@ int initGlfw(const Voxels &voxels) {
     glfwSwapInterval(1);
     glfwSetKeyCallback(window, key_callback);
 
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+
     auto vertexData = getVertexData(voxels);
 
     // Setup
@@ -157,11 +173,11 @@ int initGlfw(const Voxels &voxels) {
         float ratio = width / (float)height;
 
         glViewport(0, 0, width, height);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  
         mat4x4_identity(m);
         mat4x4_translate_in_place(m, 1, 0, -30);
-        mat4x4_rotate_Z(m, m, (float) glfwGetTime());
+        mat4x4_rotate_X(m, m, (float) glfwGetTime());
         mat4x4_perspective(p, deg2rad(80), ratio, 1.f, -1.f);
         mat4x4_mul(mvp, p, m);
  
