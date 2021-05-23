@@ -179,9 +179,30 @@ int initGlfw(const Voxels &voxels) {
     glVertexAttribPointer(vmovement_location, 3, GL_FLOAT, GL_FALSE,
                           sizeof(VertexData), (void *)(sizeof(float) * 6));
 
+    float cameraRotationHorizontal = 0;
+    float cameraRotationVertical = 0;
+
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window)) {
-        // Render here
+        // Input
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+            if (cameraRotationVertical < deg2rad(90)) {
+                cameraRotationVertical += deg2rad(1);
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            if (cameraRotationVertical > deg2rad(-90)) {
+                cameraRotationVertical -= deg2rad(1);
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+            cameraRotationHorizontal += deg2rad(1);
+        }
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+            cameraRotationHorizontal -= deg2rad(1);
+        }
+
+        // Rendering
         mat4x4 m, p, mvp;
 
         int width, height;
@@ -190,19 +211,20 @@ int initGlfw(const Voxels &voxels) {
 
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        getVertexData(vertexData, voxels, glfwGetTime());
  
         mat4x4_identity(m);
         mat4x4_translate_in_place(m, -(float)voxels.maxX() / 2, -(float)voxels.maxY() / 2, -(float)voxels.maxZ() / 2);
         mat4x4_translate_in_place(m, 0, 0, -15);
-        mat4x4_rotate_X(m, m, (float)glfwGetTime());
+
+        // camera rotation
+        mat4x4_rotate_X(m, m, cameraRotationVertical);
+        mat4x4_rotate_Y(m, m, cameraRotationHorizontal);
         mat4x4_perspective(p, deg2rad(80), ratio, 1.f, -1.f);
         mat4x4_mul(mvp, p, m);
  
         glUseProgram(program);
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat *)mvp);
-        glUniform1f(time_location, glfwGetTime());
+        //glUniform1f(time_location, glfwGetTime());
         glDrawArrays(GL_TRIANGLES, 0, vertexData.size());
 
         // Swap front and back buffers
