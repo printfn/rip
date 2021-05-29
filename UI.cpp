@@ -7,7 +7,7 @@
 
 #include "linmath.h"
 
-#define GLFW_INCLUDE_GLCOREARB
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <vector>
@@ -220,6 +220,13 @@ int initGlfw(const Voxels &voxels) {
         glfwTerminate();
         std::cerr << "GLFW Window creation failed" << std::endl;
         return -1;
+    }
+    glfwMakeContextCurrent(window);
+
+    // load all OpenGL function pointers
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+        exit(1);
     }
 
     // Make the window's context current

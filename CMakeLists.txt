@@ -35,6 +35,7 @@ if(MSVC)
 endif()
 
 add_executable(puzzles WIN32
+    glad/src/glad.c
     Direction.cpp
     main.cpp
     Pos.cpp
@@ -47,6 +48,12 @@ add_executable(puzzles WIN32
 target_compile_definitions(puzzles PRIVATE GL_SILENCE_DEPRECATION=1)
 
 target_link_libraries(puzzles ${OPENGL_LIBRARIES} glfw)
+
+set(GLAD_DIR "glad")
+add_library("glad" "${GLAD_DIR}/src/glad.c")
+target_include_directories("glad" PRIVATE "${GLAD_DIR}/include")
+target_include_directories(puzzles PRIVATE "${GLAD_DIR}/include")
+target_link_libraries(puzzles "glad" "${CMAKE_DL_LIBS}")
 
 if(MSVC)
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT puzzles)
