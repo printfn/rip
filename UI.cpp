@@ -216,7 +216,8 @@ int initGlfw(const Voxels &voxels) {
     GLint major = 0, minor = 0;
     glGetIntegerv(GL_MAJOR_VERSION, &major);
     glGetIntegerv(GL_MINOR_VERSION, &minor);
-    std::cout << "Using OpenGL " << major << "." << minor << std::endl;
+    std::cout << "Using OpenGL " << major << "." << minor
+        << " (" << glGetString(GL_VERSION) << ")" << std::endl;
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
