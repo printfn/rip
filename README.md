@@ -1,6 +1,6 @@
 # Recursive Interlocking Puzzles
 
-This project uses CMake and GLFW, and thus requires OpenGL to be available.
+This project uses CMake and GLFW, and requires OpenGL to be available.
 
 Building:
 
