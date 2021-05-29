@@ -35,7 +35,7 @@ VertexData buildVertexData(float x, float y, float z, const VoxelPiece &piece) {
     return {
         x, y, z,
         piece.r, piece.g, piece.b,
-        0, 0, 1,
+        0, 0, 0,
         piece.dx, piece.dy, piece.dz,
         piece.movementStart,
     };
@@ -73,12 +73,12 @@ void addCube(float x, float y, float z, VoxelPiece piece, std::vector<VertexData
         4, 5, 6, 5, 6, 7, // back
     };
     const std::vector<Direction> directions = {
-        Direction::ZN,
-        Direction::XP,
+        Direction::ZP,
         Direction::XN,
+        Direction::XP,
         Direction::YN,
         Direction::YP,
-        Direction::ZP,
+        Direction::ZN,
     };
     for (int i = 0; i < (int)indices.size(); ++i) {
         int index = indices[i];
@@ -121,7 +121,7 @@ void main() {
     gl_Position = PV * M * vec4(vPos + vMovement * movementTime, 1.0);
     color = vCol;
     normal = vNormal;
-    fragPos = vec3(M * vec4(vPos + vMovement * movementTime, 1.0));
+    fragPos = vPos + vMovement * movementTime;
 }
 )";
  
@@ -188,6 +188,14 @@ int initGlfw(const Voxels &voxels) {
     // Initialize the library
     if (!glfwInit())
         return -1;
+
+    //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+#ifdef __APPLE__
+    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
 
     // Create a windowed mode window and its OpenGL context
     GLFWwindow *window = glfwCreateWindow(
@@ -323,11 +331,11 @@ int initGlfw(const Voxels &voxels) {
         glUniformMatrix4fv(m_location, 1, GL_FALSE, (const GLfloat *)m);
         glUniform1f(time_location, cameraTime);
 
-        float lightPosY = sin(cameraRotationVertical) * 15;
-        float lightPosZ = cos(cameraRotationVertical) * 15;
-        float lightPosX2 = sin(cameraRotationHorizontal) * lightPosZ;
-        float lightPosZ2 = cos(cameraRotationHorizontal) * lightPosZ;
-        glUniform3f(light_pos_location, lightPosX2, lightPosY, lightPosZ2);
+        vec3 lightPos = {0, 0, -15};
+        vec3_rotate_x(lightPos, cameraRotationVertical);
+        vec3_rotate_y(lightPos, cameraRotationHorizontal);
+        //std::cout << "light pos: (" << lightPos[0] << ", " << lightPos[1] << ", " << lightPos[2] << ")" << std::endl;
+        glUniform3f(light_pos_location, lightPos[0], lightPos[1], lightPos[2]);
         glDrawArrays(GL_TRIANGLES, 0, vertexData.size());
 
         // Swap front and back buffers
