@@ -1,4 +1,5 @@
 #include "UI.h"
+#include "Direction.h"
 #include "Pos.h"
 #include "utils.h"
 #include "VoxelPiece.h"
@@ -21,6 +22,7 @@
 struct VertexData {
     float x, y, z;
     float r, g, b;
+    float nx, ny, nz; // normal
     float dx, dy, dz; // direction of movement
     float movementStart;
 };
@@ -29,21 +31,40 @@ struct Color {
     float r, g, b;
 };
 
-void addCube(float x, float y, float z, VoxelPiece piece, std::vector<VertexData> &data) {
-    float r = piece.r;
-    float g = piece.g;
-    float b = piece.b;
-    std::vector<VertexData> vertices = {
-        { x, y, z, r, g, b, piece.dx, piece.dy, piece.dz, piece.movementStart },
-        { x + 1, y, z, r, g, b, piece.dx, piece.dy, piece.dz, piece.movementStart },
-        { x, y + 1, z, r, g, b, piece.dx, piece.dy, piece.dz, piece.movementStart },
-        { x + 1, y + 1, z, r, g, b, piece.dx, piece.dy, piece.dz, piece.movementStart },
-        { x, y, z + 1, r, g, b, piece.dx, piece.dy, piece.dz, piece.movementStart },
-        { x + 1, y, z + 1, r, g, b, piece.dx, piece.dy, piece.dz, piece.movementStart },
-        { x, y + 1, z + 1, r, g, b, piece.dx, piece.dy, piece.dz, piece.movementStart },
-        { x + 1, y + 1, z + 1, r, g, b, piece.dx, piece.dy, piece.dz, piece.movementStart },
+VertexData buildVertexData(float x, float y, float z, const VoxelPiece &piece) {
+    return {
+        x, y, z,
+        piece.r, piece.g, piece.b,
+        0, 0, 1,
+        piece.dx, piece.dy, piece.dz,
+        piece.movementStart,
     };
-    std::vector<int> indices = {
+}
+
+VertexData setNormal(VertexData data, Direction dir) {
+    switch (dir) {
+        case Direction::XP: data.nx = 1; data.ny = 0; data.nz = 0; break;
+        case Direction::XN: data.nx = -1; data.ny = 0; data.nz = 0; break;
+        case Direction::YP: data.nx = 0; data.ny = 1; data.nz = 0; break;
+        case Direction::YN: data.nx = 0; data.ny = -1; data.nz = 0; break;
+        case Direction::ZP: data.nx = 0; data.ny = 0; data.nz = 1; break;
+        case Direction::ZN: data.nx = 0; data.ny = 0; data.nz = -1; break;
+    }
+    return data;
+}
+
+void addCube(float x, float y, float z, VoxelPiece piece, std::vector<VertexData> &data) {
+    const std::vector<VertexData> vertices = {
+        buildVertexData(x, y, z, piece),
+        buildVertexData(x + 1, y, z, piece),
+        buildVertexData(x, y + 1, z, piece),
+        buildVertexData(x + 1, y + 1, z, piece),
+        buildVertexData(x, y, z + 1, piece),
+        buildVertexData(x + 1, y, z + 1, piece),
+        buildVertexData(x, y + 1, z + 1, piece),
+        buildVertexData(x + 1, y + 1, z + 1, piece),
+    };
+    const std::vector<int> indices = {
         0, 1, 2, 1, 2, 3, // front
         0, 2, 4, 2, 4, 6, // left
         1, 3, 5, 3, 5, 7, // right
@@ -51,8 +72,18 @@ void addCube(float x, float y, float z, VoxelPiece piece, std::vector<VertexData
         2, 3, 6, 3, 6, 7, // top
         4, 5, 6, 5, 6, 7, // back
     };
-    for (int i : indices) {
-        data.push_back(vertices[i]);
+    const std::vector<Direction> directions = {
+        Direction::ZP,
+        Direction::XP,
+        Direction::XP,
+        Direction::YP,
+        Direction::YP,
+        Direction::ZP,
+    };
+    for (int i = 0; i < (int)indices.size(); ++i) {
+        int index = indices[i];
+        Direction dir = directions[i / 6];
+        data.push_back(setNormal(vertices[index], dir));
     }
 }
 
@@ -77,6 +108,7 @@ uniform mat4 MVP;
 uniform float fTime;
 attribute vec3 vCol;
 attribute vec3 vPos;
+attribute vec3 vNormal;
 attribute vec3 vMovement;
 attribute float fMovementStart;
 varying vec3 color;
@@ -180,11 +212,12 @@ int initGlfw(const Voxels &voxels) {
     glLinkProgram(program);
  
     GLint mvp_location = glGetUniformLocation(program, "MVP");
-    GLint vpos_location = glGetAttribLocation(program, "vPos");
+    GLint time_location = glGetUniformLocation(program, "fTime");
     GLint vcol_location = glGetAttribLocation(program, "vCol");
+    GLint vpos_location = glGetAttribLocation(program, "vPos");
+    GLint vnormal_location = glGetAttribLocation(program, "vNormal");
     GLint vmovement_location = glGetAttribLocation(program, "vMovement");
     GLint fmovementstart_location = glGetAttribLocation(program, "fMovementStart");
-    GLint time_location = glGetUniformLocation(program, "fTime");
 
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE,
@@ -192,12 +225,15 @@ int initGlfw(const Voxels &voxels) {
     glEnableVertexAttribArray(vcol_location);
     glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
                           sizeof(VertexData), (void *)(sizeof(float) * 3));
+    glEnableVertexAttribArray(vnormal_location);
+    glVertexAttribPointer(vnormal_location, 3, GL_FLOAT, GL_FALSE,
+                          sizeof(VertexData), (void *)(sizeof(float) * 6));
     glEnableVertexAttribArray(vmovement_location);
     glVertexAttribPointer(vmovement_location, 3, GL_FLOAT, GL_FALSE,
-                          sizeof(VertexData), (void *)(sizeof(float) * 6));
+                          sizeof(VertexData), (void *)(sizeof(float) * 9));
     glEnableVertexAttribArray(fmovementstart_location);
     glVertexAttribPointer(fmovementstart_location, 1, GL_FLOAT, GL_FALSE,
-                          sizeof(VertexData), (void *)(sizeof(float) * 9));
+                          sizeof(VertexData), (void *)(sizeof(float) * 12));
 
     float cameraRotationHorizontal = 0;
     float cameraRotationVertical = 0;
