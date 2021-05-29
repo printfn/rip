@@ -35,7 +35,6 @@ if(MSVC)
 endif()
 
 add_executable(puzzles WIN32
-    glad/src/glad.c
     Direction.cpp
     main.cpp
     Pos.cpp
