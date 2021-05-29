@@ -104,8 +104,7 @@ void getVertexData(std::vector<VertexData> &vertexData, const Voxels &v, float t
 }
 
 static const char* vertex_shader_text = R"(
-uniform mat4 PV;
-uniform mat4 M;
+uniform mat4 MVP;
 uniform float fTime;
 attribute vec3 vCol;
 attribute vec3 vPos;
@@ -118,7 +117,7 @@ varying vec3 fragPos;
 
 void main() {
     float movementTime = max(0.0, fTime - fMovementStart);
-    gl_Position = PV * M * vec4(vPos + vMovement * movementTime, 1.0);
+    gl_Position = MVP * vec4(vPos + vMovement * movementTime, 1.0);
     color = vCol;
     normal = vNormal;
     fragPos = vPos + vMovement * movementTime;
@@ -240,8 +239,7 @@ int initGlfw(const Voxels &voxels) {
     glAttachShader(program, fragment_shader);
     glLinkProgram(program);
  
-    GLint pv_location = glGetUniformLocation(program, "PV");
-    GLint m_location = glGetUniformLocation(program, "M");
+    GLint mvp_location = glGetUniformLocation(program, "MVP");
     GLint time_location = glGetUniformLocation(program, "fTime");
     GLint light_pos_location = glGetUniformLocation(program, "vLightPos");
     GLint vcol_location = glGetAttribLocation(program, "vCol");
@@ -302,7 +300,7 @@ int initGlfw(const Voxels &voxels) {
         }
 
         // Rendering
-        mat4x4 m, p;
+        mat4x4 m, p, mvp;
 
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
@@ -325,10 +323,11 @@ int initGlfw(const Voxels &voxels) {
             -(float)voxels.maxZ() / 2);
 
         mat4x4_perspective(p, deg2rad(80), ratio, 1.f, -1.f);
+
+        mat4x4_mul(mvp, p, m);
         
         glUseProgram(program);
-        glUniformMatrix4fv(pv_location, 1, GL_FALSE, (const GLfloat *)p);
-        glUniformMatrix4fv(m_location, 1, GL_FALSE, (const GLfloat *)m);
+        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat *)mvp);
         glUniform1f(time_location, cameraTime);
 
         vec3 lightPos = {0, 0, -15};
@@ -336,6 +335,7 @@ int initGlfw(const Voxels &voxels) {
         vec3_rotate_y(lightPos, cameraRotationHorizontal);
         //std::cout << "light pos: (" << lightPos[0] << ", " << lightPos[1] << ", " << lightPos[2] << ")" << std::endl;
         glUniform3f(light_pos_location, lightPos[0], lightPos[1], lightPos[2]);
+
         glDrawArrays(GL_TRIANGLES, 0, vertexData.size());
 
         // Swap front and back buffers
