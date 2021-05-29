@@ -17,6 +17,10 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 project(puzzles)
 
 # Add OpenGL and GLFW
+if(POLICY CMP0072)
+    # Prefer GLVND over legacy OpenGL modules
+    cmake_policy(SET CMP0072 NEW)
+endif()
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIRS})
 
