@@ -112,16 +112,19 @@ attribute vec3 vNormal;
 attribute vec3 vMovement;
 attribute float fMovementStart;
 varying vec3 color;
+varying vec3 normal;
 
 void main() {
     float movementTime = max(0.0, fTime - fMovementStart);
     gl_Position = MVP * vec4(vPos + vMovement * movementTime, 1.0);
     color = vCol;
+    normal = vNormal;
 }
 )";
  
 static const char* fragment_shader_text = R"(
 varying vec3 color;
+varying vec3 normal;
 
 void main() {
     gl_FragColor = vec4(color, 1.0);
