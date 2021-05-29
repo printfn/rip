@@ -7,14 +7,7 @@
 
 #include "linmath.h"
 
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#else
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glut.h>
-#endif
-
+#define GLFW_INCLUDE_GLCOREARB
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <vector>
@@ -180,6 +173,14 @@ void checkShader(GLuint shader) {
     exit(1);
 }
 
+void checkLocation(GLint location) {
+    if (location >= 0) {
+        return;
+    }
+    std::cerr << "Invalid location " << location << std::endl;
+    exit(1);
+}
+
 int initGlfw(const Voxels &voxels) {
     // Set error callback, this can happen before GLFW initialisation
     glfwSetErrorCallback(error_callback);
@@ -210,6 +211,12 @@ int initGlfw(const Voxels &voxels) {
     glClearColor(0.4f, 0.8f, 0.9f, 0.0f);
     glfwSwapInterval(1);
     glfwSetKeyCallback(window, key_callback);
+
+    // Check OpenGL version
+    GLint major = 0, minor = 0;
+    glGetIntegerv(GL_MAJOR_VERSION, &major);
+    glGetIntegerv(GL_MINOR_VERSION, &minor);
+    std::cout << "Using OpenGL " << major << "." << minor << std::endl;
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -247,6 +254,15 @@ int initGlfw(const Voxels &voxels) {
     GLint vnormal_location = glGetAttribLocation(program, "vNormal");
     GLint vmovement_location = glGetAttribLocation(program, "vMovement");
     GLint fmovementstart_location = glGetAttribLocation(program, "fMovementStart");
+
+    checkLocation(mvp_location);
+    checkLocation(time_location);
+    checkLocation(light_pos_location);
+    checkLocation(vcol_location);
+    checkLocation(vpos_location);
+    checkLocation(vnormal_location);
+    checkLocation(vmovement_location);
+    checkLocation(fmovementstart_location);
 
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE,
