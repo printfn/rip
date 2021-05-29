@@ -1,7 +1,7 @@
 #ifndef HEADER_UTILS
 #define HEADER_UTILS
 
-#include "linmath.h"
+typedef float vec3[3];
 
 float deg2rad(float degrees);
 void vec3_rotate_x(vec3 v, float angle);
