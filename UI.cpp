@@ -113,21 +113,38 @@ attribute vec3 vMovement;
 attribute float fMovementStart;
 varying vec3 color;
 varying vec3 normal;
+varying vec3 fragPos;
 
 void main() {
     float movementTime = max(0.0, fTime - fMovementStart);
     gl_Position = MVP * vec4(vPos + vMovement * movementTime, 1.0);
     color = vCol;
     normal = vNormal;
+    fragPos = vPos;
 }
 )";
  
 static const char* fragment_shader_text = R"(
 varying vec3 color;
 varying vec3 normal;
+varying vec3 fragPos;
+uniform vec3 vLightPos;
 
 void main() {
-    gl_FragColor = vec4(color, 1.0);
+    vec3 lightColor = vec3(1, 1, 1);
+
+    // ambient lighting
+    float ambientStrength = 0.0;
+    vec3 ambient = ambientStrength * lightColor;
+
+    // diffuse lighting
+    vec3 norm = normalize(normal);
+    vec3 lightDir = normalize(vLightPos - fragPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * lightColor;
+
+    vec3 result = (ambient + diffuse) * color;
+    gl_FragColor = vec4(result, 1.0);
 }
 )";
 
@@ -216,6 +233,7 @@ int initGlfw(const Voxels &voxels) {
  
     GLint mvp_location = glGetUniformLocation(program, "MVP");
     GLint time_location = glGetUniformLocation(program, "fTime");
+    GLint light_pos_location = glGetUniformLocation(program, "vLightPos");
     GLint vcol_location = glGetAttribLocation(program, "vCol");
     GLint vpos_location = glGetAttribLocation(program, "vPos");
     GLint vnormal_location = glGetAttribLocation(program, "vNormal");
@@ -302,6 +320,7 @@ int initGlfw(const Voxels &voxels) {
         glUseProgram(program);
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat *)mvp);
         glUniform1f(time_location, cameraTime);
+        glUniform3f(light_pos_location, 10, 10, 10);
         glDrawArrays(GL_TRIANGLES, 0, vertexData.size());
 
         // Swap front and back buffers
