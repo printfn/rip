@@ -16,6 +16,7 @@ std::ostream &operator<<(std::ostream &os, const Direction &dir) {
         case Direction::ZP: return os << "+z";
         case Direction::ZN: return os << "-z";
     }
+    return Direction::XP;
 }
 
 Direction Direction::opposite() const {
@@ -27,4 +28,5 @@ Direction Direction::opposite() const {
         case Direction::ZP: return Direction::ZN;
         case Direction::ZN: return Direction::ZP;
     }
+    return Direction::XP;
 }
