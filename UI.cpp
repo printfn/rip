@@ -73,10 +73,10 @@ void addCube(float x, float y, float z, VoxelPiece piece, std::vector<VertexData
         4, 5, 6, 5, 6, 7, // back
     };
     const std::vector<Direction> directions = {
-        Direction::ZP,
+        Direction::ZN,
         Direction::XP,
-        Direction::XP,
-        Direction::YP,
+        Direction::XN,
+        Direction::YN,
         Direction::YP,
         Direction::ZP,
     };
@@ -104,7 +104,8 @@ void getVertexData(std::vector<VertexData> &vertexData, const Voxels &v, float t
 }
 
 static const char* vertex_shader_text = R"(
-uniform mat4 MVP;
+uniform mat4 PV;
+uniform mat4 M;
 uniform float fTime;
 attribute vec3 vCol;
 attribute vec3 vPos;
@@ -117,10 +118,10 @@ varying vec3 fragPos;
 
 void main() {
     float movementTime = max(0.0, fTime - fMovementStart);
-    gl_Position = MVP * vec4(vPos + vMovement * movementTime, 1.0);
+    gl_Position = PV * M * vec4(vPos + vMovement * movementTime, 1.0);
     color = vCol;
     normal = vNormal;
-    fragPos = vPos;
+    fragPos = vec3(M * vec4(vPos + vMovement * movementTime, 1.0));
 }
 )";
  
@@ -134,7 +135,7 @@ void main() {
     vec3 lightColor = vec3(1, 1, 1);
 
     // ambient lighting
-    float ambientStrength = 0.0;
+    float ambientStrength = 0.3;
     vec3 ambient = ambientStrength * lightColor;
 
     // diffuse lighting
@@ -231,7 +232,8 @@ int initGlfw(const Voxels &voxels) {
     glAttachShader(program, fragment_shader);
     glLinkProgram(program);
  
-    GLint mvp_location = glGetUniformLocation(program, "MVP");
+    GLint pv_location = glGetUniformLocation(program, "PV");
+    GLint m_location = glGetUniformLocation(program, "M");
     GLint time_location = glGetUniformLocation(program, "fTime");
     GLint light_pos_location = glGetUniformLocation(program, "vLightPos");
     GLint vcol_location = glGetAttribLocation(program, "vCol");
@@ -292,7 +294,7 @@ int initGlfw(const Voxels &voxels) {
         }
 
         // Rendering
-        mat4x4 m, p, mvp;
+        mat4x4 m, p;
 
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
@@ -315,12 +317,17 @@ int initGlfw(const Voxels &voxels) {
             -(float)voxels.maxZ() / 2);
 
         mat4x4_perspective(p, deg2rad(80), ratio, 1.f, -1.f);
-        mat4x4_mul(mvp, p, m);
- 
+        
         glUseProgram(program);
-        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat *)mvp);
+        glUniformMatrix4fv(pv_location, 1, GL_FALSE, (const GLfloat *)p);
+        glUniformMatrix4fv(m_location, 1, GL_FALSE, (const GLfloat *)m);
         glUniform1f(time_location, cameraTime);
-        glUniform3f(light_pos_location, 10, 10, 10);
+
+        float lightPosY = sin(cameraRotationVertical) * 15;
+        float lightPosZ = cos(cameraRotationVertical) * 15;
+        float lightPosX2 = sin(cameraRotationHorizontal) * lightPosZ;
+        float lightPosZ2 = cos(cameraRotationHorizontal) * lightPosZ;
+        glUniform3f(light_pos_location, lightPosX2, lightPosY, lightPosZ2);
         glDrawArrays(GL_TRIANGLES, 0, vertexData.size());
 
         // Swap front and back buffers
