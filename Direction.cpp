@@ -9,14 +9,26 @@ Direction::operator Value() const {
 
 std::ostream &operator<<(std::ostream &os, const Direction &dir) {
     switch (dir) {
-        case Direction::XP: return os << "+x";
-        case Direction::XN: return os << "-x";
-        case Direction::YP: return os << "+y";
-        case Direction::YN: return os << "-y";
-        case Direction::ZP: return os << "+z";
-        case Direction::ZN: return os << "-z";
+        case Direction::XP:
+            os << "+x";
+            break;
+        case Direction::XN:
+            os << "-x";
+            break;
+        case Direction::YP:
+            os << "+y";
+            break;
+        case Direction::YN:
+            os << "-y";
+            break;
+        case Direction::ZP:
+            os << "+z";
+            break;
+        case Direction::ZN:
+            os << "-z";
+            break;
     }
-    return Direction::XP;
+    return os;
 }
 
 Direction Direction::opposite() const {
