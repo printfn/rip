@@ -97,16 +97,20 @@ void getVertexData(std::vector<VertexData> &vertexData, const Voxels &v, float t
 }
 
 static const char* vertex_shader_text = R"(
+#version 330
+
 uniform mat4 MVP;
 uniform float fTime;
-attribute vec3 vCol;
-attribute vec3 vPos;
-attribute vec3 vNormal;
-attribute vec3 vMovement;
-attribute float fMovementStart;
-varying vec3 color;
-varying vec3 normal;
-varying vec3 fragPos;
+
+in vec3 vCol;
+in vec3 vPos;
+in vec3 vNormal;
+in vec3 vMovement;
+in float fMovementStart;
+
+out vec3 color;
+out vec3 normal;
+out vec3 fragPos;
 
 void main() {
     float movementTime = max(0.0, fTime - fMovementStart);
@@ -118,9 +122,14 @@ void main() {
 )";
  
 static const char* fragment_shader_text = R"(
-varying vec3 color;
-varying vec3 normal;
-varying vec3 fragPos;
+#version 330
+
+layout(location = 0) out vec4 FragColor;
+
+in vec3 color;
+in vec3 normal;
+in vec3 fragPos;
+
 uniform vec3 vLightPos;
 
 void main() {
@@ -137,7 +146,7 @@ void main() {
     vec3 diffuse = 0.7 * diff * lightColor;
 
     vec3 result = (ambient + diffuse) * color;
-    gl_FragColor = vec4(result, 1.0);
+    FragColor = vec4(result, 1.0);
 }
 )";
 
@@ -181,6 +190,13 @@ void checkLocation(GLint location) {
     exit(1);
 }
 
+void checkForOpenGLErrors() {
+    GLenum error;
+    while ((error = glGetError()) != GL_NO_ERROR) {
+        std::cout << "OpenGL error: " << error << std::endl;
+    }
+}
+
 int initGlfw(const Voxels &voxels) {
     // Set error callback, this can happen before GLFW initialisation
     glfwSetErrorCallback(error_callback);
@@ -189,12 +205,12 @@ int initGlfw(const Voxels &voxels) {
     if (!glfwInit())
         return -1;
 
-    //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #ifdef __APPLE__
-    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
     // Create a windowed mode window and its OpenGL context
@@ -226,6 +242,10 @@ int initGlfw(const Voxels &voxels) {
     getVertexData(vertexData, voxels, 0.f);
 
     // Setup
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
     GLuint vertex_buffer;
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
@@ -360,6 +380,9 @@ int initGlfw(const Voxels &voxels) {
 
         // Poll for and process events
         glfwPollEvents();
+
+        // Make sure there weren't any OpenGL errors
+        checkForOpenGLErrors();
     }
 
     glfwDestroyWindow(window);
