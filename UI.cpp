@@ -141,7 +141,7 @@ void main() {
     vec3 norm = normalize(normal);
     vec3 lightDir = normalize(vLightPos - fragPos);
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * lightColor;
+    vec3 diffuse = 0.7 * diff * lightColor;
 
     vec3 result = (ambient + diffuse) * color;
     gl_FragColor = vec4(result, 1.0);
