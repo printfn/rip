@@ -222,6 +222,10 @@ void Voxels::invalidateAccessibilityHeuristic() const {
 }
 
 Direction movableDirection(const Voxels &v, int piece) {
+    if (piece == 0) {
+        std::cerr << "Piece 0 is invalid" << std::endl;
+        exit(1);
+    }
     bool isXPBlocked = false;
     bool isXNBlocked = false;
     bool isYPBlocked = false;
@@ -255,24 +259,10 @@ Direction movableDirection(const Voxels &v, int piece) {
     if (!isYNBlocked) return Direction::YN;
     if (!isZPBlocked) return Direction::ZP;
     if (!isZNBlocked) return Direction::ZN;
-    std::cerr << "Piece is blocked in all directions!" << std::endl;
+    std::cerr << "Piece " << piece << " is blocked in all directions!" << std::endl;
     return Direction::ZN;
 }
 
-VoxelPiece &Voxels::propertiesForPiece(int piece) {
-    while (piece >= (int)voxelPieceProperties.size()) {
-        int idx = (int)voxelPieceProperties.size();
-        Direction dir = movableDirection(*this, idx);
-        voxelPieceProperties.push_back(VoxelPiece{idx, 6, dir});
-    }
-    return voxelPieceProperties[piece];
-}
-
-const VoxelPiece &Voxels::propertiesForPiece(int piece) const {
-    while (piece >= (int)voxelPieceProperties.size()) {
-        int idx = (int)voxelPieceProperties.size();
-        Direction dir = movableDirection(*this, idx);
-        voxelPieceProperties.push_back(VoxelPiece{idx, maxPieceIdx(), dir});
-    }
-    return voxelPieceProperties[piece];
+VoxelPiece Voxels::propertiesForPiece(int piece) const {
+    return VoxelPiece{piece, maxPieceIdx(), movableDirection(*this, piece)};
 }

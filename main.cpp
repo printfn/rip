@@ -134,7 +134,9 @@ struct OrientedPair {
     Pos blocking, blockee;
 };
 
-std::vector<OrientedPair> breadthFirstPairSearch(const Voxels &v, SeedVoxel seed, const std::vector<Pos> &anchors) {
+std::vector<OrientedPair> breadthFirstPairSearch(
+    const Voxels &v, SeedVoxel seed, const std::vector<Pos> &anchors, int pieceNum
+) {
     std::vector<OrientedPair> results;
     std::vector<Pos> done;
     std::deque<Pos> queue{seed.pos};
@@ -144,8 +146,10 @@ std::vector<OrientedPair> breadthFirstPairSearch(const Voxels &v, SeedVoxel seed
 
         auto otherPosInPair = pos.nextInDirection(seed.normalDir.opposite());
         if (v.existsAt(pos) && v.existsAt(otherPosInPair) && !contains(anchors, otherPosInPair)) {
-            OrientedPair result{pos, otherPosInPair};
-            results.push_back(result);
+            if (v[pos] == 1 && v[otherPosInPair] == 1) {
+                OrientedPair result{pos, otherPosInPair};
+                results.push_back(result);
+            }
         }
 
         done.push_back(pos);
@@ -161,8 +165,10 @@ std::vector<OrientedPair> breadthFirstPairSearch(const Voxels &v, SeedVoxel seed
     return results;
 }
 
-std::vector<OrientedPair> inaccessiblePairs(const Voxels &v, SeedVoxel seed, const std::vector<Pos> &anchors) {
-    std::vector<OrientedPair> candidates = breadthFirstPairSearch(v, seed, anchors);
+std::vector<OrientedPair> inaccessiblePairs(
+    const Voxels &v, SeedVoxel seed, const std::vector<Pos> &anchors, int pieceNum
+) {
+    std::vector<OrientedPair> candidates = breadthFirstPairSearch(v, seed, anchors, pieceNum);
     std::sort(candidates.begin(), candidates.end(),
         [&v](const OrientedPair &p1, const OrientedPair &p2) {
             double a1 = v.accessibilityHeuristic(p1.blockee, 3);
@@ -234,7 +240,7 @@ std::vector<std::vector<Pos>> findPaths(
     std::vector<Pos> steps;
     for (Direction dir : ALL_DIRECTIONS) {
         Pos nextPos = from.nextInDirection(dir);
-        if (v[nextPos] == 0) continue;
+        if (v[nextPos] != 1) continue;
         if (nextPos.isInLine(disallowed, disallowedDir.opposite())) continue;
         if (contains(anchors, nextPos)) continue;
         if (nextPos == to) {
@@ -268,7 +274,7 @@ bool addUpwardVoxels(
     for (const auto &p : path) {
         Pos next = p.nextInDirection(removalDir);
         while (v.isInRange(next)) {
-            if (v.existsAt(next) && !contains(path, next) && !contains(extraVoxels, next)) {
+            if (v[next] == 1 && !contains(path, next) && !contains(extraVoxels, next)) {
                 if (contains(anchors, next)) {
                     return false;
                 }
@@ -387,7 +393,7 @@ Direction constructPiece(Voxels &voxels, int pieceNum, int minSize, Direction pr
         ", removal direction: " << seed.removalDir <<
         ", normal direction: " << seed.normalDir <<
         ", accessibility: " << voxels.accessibilityHeuristic(seed.pos, 3) << std::endl;
-    auto pairs = inaccessiblePairs(voxels, seed, anchors);
+    auto pairs = inaccessiblePairs(voxels, seed, anchors, pieceNum);
     std::cout << "Found " << pairs.size() << " blocking pairs" << std::endl;
     std::cout << "Minimum accessibility: " << voxels.accessibilityHeuristic(pairs.front().blockee, 3) << std::endl;
     std::cout << "Maximum accessibility: " << voxels.accessibilityHeuristic(pairs.back().blockee, 3) << std::endl;
@@ -424,12 +430,56 @@ Direction constructSubsequentPiece(Voxels &voxels, int pieceNum, int minSize, Di
     std::cout << "Constructing piece " << pieceNum << std::endl;
     SeedVoxel seed = findInitialSeed(voxels, true, pieceNum, previousRemovalDir);
     std::vector<Pos> nextPiece = expandSubsequentPieceFromSeed(voxels, seed);
+    std::vector<Pos> anchors;
+    
+    // now we need to ensure nextPiece is blocked in all other directions
+    for (Direction d : ALL_DIRECTIONS) {
+        if (d == seed.removalDir) continue;
+        bool freePassage = true;
+        for (const Pos &p : nextPiece) {
+            Pos next = p.nextInDirection(d);
+            if (!voxels.isInRange(next)) continue;
+            if (voxels[next] == 1 || voxels[next] == pieceNum) {
+                freePassage = false;
+                break;
+            }
+        }
+        if (freePassage) {
+            seed.normalDir = d;
+            anchors = findAnchors(seed, voxels);
+            auto pairs = inaccessiblePairs(voxels, seed, anchors, pieceNum);
+            std::cout << "Found " << pairs.size() << " blocking pairs" << std::endl;
+            std::vector<PotentialPiece> potentialPieces = findPotentialPieces(seed.pos, pairs, seed.removalDir, anchors, voxels);
+            std::sort(potentialPieces.begin(), potentialPieces.end(),
+                [](const auto &p1, const auto &p2) {
+                    return p1.voxels.size() < p2.voxels.size();
+                });
+            for (Pos p : potentialPieces[0].voxels) {
+                if (!contains(nextPiece, p)) {
+                    nextPiece.push_back(p);
+                }
+            }
+        }
+    }
     
     for (const auto &pos : nextPiece) {
         voxels[pos] = pieceNum + 1;
     }
 
     return seed.removalDir;
+}
+
+void designateFinalPiece(Voxels &v) {
+    int max = v.maxPieceIdx();
+    for (int x = 0; x < v.maxX(); ++x) {
+        for (int y = 0; y < v.maxY(); ++y) {
+            for (int z = 0; z < v.maxZ(); ++z) {
+                if (v[{x, y, z}] == 1) {
+                    v[{x, y, z}] = max + 1;
+                }
+            }
+        }
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -439,6 +489,7 @@ int main(int argc, char *argv[]) {
 
     Direction removalDir = constructPiece(voxels, 1, pieceSize, Direction::YP);
     removalDir = constructSubsequentPiece(voxels, 2, pieceSize, removalDir);
+    designateFinalPiece(voxels);
     initGlfw(voxels);
     return 0;
 }
