@@ -11,17 +11,17 @@
 #include <cstdio>
 #include <iostream>
 
-struct OrientedPos {
+struct SeedVoxel {
     Pos pos;
     Direction removalDir;
     Direction normalDir; // normal direction in which no cube exists
 
-    OrientedPos(Pos p, Direction removalDir, Direction normalDir)
+    SeedVoxel(Pos p, Direction removalDir, Direction normalDir)
         : pos{p}, removalDir{removalDir}, normalDir{normalDir} {}
 };
 
-std::vector<OrientedPos> initialSeedCandidates(const Voxels &v, bool debug = false) {
-    std::vector<OrientedPos> results;
+std::vector<SeedVoxel> initialSeedCandidates(const Voxels &v, bool debug = false) {
+    std::vector<SeedVoxel> results;
     int skippedDueToWrongFaceCount = 0;
     int skippedDueToNonFreePassage = 0;
     const Direction removalDir = Direction::YP;
@@ -47,7 +47,7 @@ std::vector<OrientedPos> initialSeedCandidates(const Voxels &v, bool debug = fal
                 if (!v.existsAt(p.nextInDirection(Direction::ZP))) normalDir = Direction::ZP;
                 if (!v.existsAt(p.nextInDirection(Direction::ZN))) normalDir = Direction::ZN;
                 if (normalDir == removalDir) continue;
-                results.push_back(OrientedPos(p, removalDir, normalDir));
+                results.push_back(SeedVoxel{p, removalDir, normalDir});
             }
         }
     }
@@ -59,7 +59,7 @@ std::vector<OrientedPos> initialSeedCandidates(const Voxels &v, bool debug = fal
     return results;
 }
 
-OrientedPos findInitialSeed(const Voxels &v, bool debug = false) {
+SeedVoxel findInitialSeed(const Voxels &v, bool debug = false) {
     auto seeds = initialSeedCandidates(v, debug);
     if (seeds.empty()) {
         std::cerr << "Could not find any initial seed candidates!" << std::endl;
@@ -84,7 +84,7 @@ struct OrientedPair {
     Pos blocking, blockee;
 };
 
-std::vector<OrientedPair> breadthFirstPairSearch(const Voxels &v, OrientedPos seed, const std::vector<Pos> &anchors) {
+std::vector<OrientedPair> breadthFirstPairSearch(const Voxels &v, SeedVoxel seed, const std::vector<Pos> &anchors) {
     std::vector<OrientedPair> results;
     std::vector<Pos> done;
     std::deque<Pos> queue{seed.pos};
@@ -111,7 +111,7 @@ std::vector<OrientedPair> breadthFirstPairSearch(const Voxels &v, OrientedPos se
     return results;
 }
 
-std::vector<OrientedPair> inaccessiblePairs(const Voxels &v, OrientedPos seed, const std::vector<Pos> &anchors) {
+std::vector<OrientedPair> inaccessiblePairs(const Voxels &v, SeedVoxel seed, const std::vector<Pos> &anchors) {
     std::vector<OrientedPair> candidates = breadthFirstPairSearch(v, seed, anchors);
     std::sort(candidates.begin(), candidates.end(),
         [&v](const OrientedPair &p1, const OrientedPair &p2) {
@@ -234,11 +234,16 @@ bool addUpwardVoxels(
     return true;
 }
 
-std::vector<std::vector<Pos>> findPotentialPieces(
+struct PotentialPiece {
+    std::vector<Pos> voxels;
+    Pos blockingVoxel;
+};
+
+std::vector<PotentialPiece> findPotentialPieces(
     Pos from, const std::vector<OrientedPair> &blockingPairs, Direction disallowedDir,
     const std::vector<Pos> anchors, const Voxels &v
 ) {
-    std::vector<std::vector<Pos>> shortestPaths;
+    std::vector<PotentialPiece> shortestPaths;
     int shortestPathLength = 0;
     while (shortestPaths.size() == 0) {
         ++shortestPathLength;
@@ -250,7 +255,8 @@ std::vector<std::vector<Pos>> findPotentialPieces(
                 if (addUpwardVoxels(potentialPiece, disallowedDir, anchors, v)) {
                     // only accept this shortest path if it doesn't include anchors
                     potentialPiece.push_back(from);
-                    shortestPaths.push_back(potentialPiece);
+                    PotentialPiece piece{potentialPiece, blockingPair.blocking};
+                    shortestPaths.push_back(piece);
                 }
             }
         }
@@ -260,7 +266,7 @@ std::vector<std::vector<Pos>> findPotentialPieces(
     return shortestPaths;
 }
 
-std::vector<Pos> findAnchors(const OrientedPos &seed, const Voxels &v) {
+std::vector<Pos> findAnchors(const SeedVoxel &seed, const Voxels &v) {
     std::vector<Pos> anchors;
     for (Direction dir : ALL_DIRECTIONS) {
         if (dir == seed.normalDir) continue;
@@ -280,9 +286,53 @@ std::vector<Pos> findAnchors(const OrientedPos &seed, const Voxels &v) {
     return anchors;
 }
 
+void expandPiece(PotentialPiece &piece, std::vector<Pos> anchors, const Voxels &v, const SeedVoxel &seed) {
+    Pos additionalAnchor = piece.blockingVoxel;
+    while (v.existsAt(additionalAnchor)) {
+        additionalAnchor = additionalAnchor.nextInDirection(seed.normalDir);
+    }
+    anchors.push_back(additionalAnchor);
+    
+    std::vector<Pos> candidateVoxels;
+    for (Pos p : piece.voxels) {
+        for (Direction dir : ALL_DIRECTIONS) {
+            Pos cand = p.nextInDirection(dir);
+            if (!v.existsAt(cand)) continue;
+            if (contains(piece.voxels, cand)) continue;
+            if (contains(candidateVoxels, cand)) continue;
+            if (contains(anchors, cand)) continue;
+            bool skip = false;
+            for (Pos anchor : anchors) {
+                if (cand.isInLine(anchor, seed.removalDir)) {
+                    skip = true;
+                    break;
+                }
+            }
+            if (skip) continue;
+            candidateVoxels.push_back(cand);
+        }
+    }
+    
+    std::vector<std::vector<Pos>> possibleExpansions;
+    for (Pos p : candidateVoxels) {
+        std::vector<Pos> expansion;
+        expansion.push_back(p);
+        if (!addUpwardVoxels(expansion, seed.removalDir, anchors, v)) continue;
+        possibleExpansions.push_back(std::move(expansion));
+    }
+    
+    std::cout << "Found " << possibleExpansions.size() << " possible expansions" << std::endl;
+    
+    for (Pos p : possibleExpansions[0]) {
+        if (!contains(piece.voxels, p)) {
+            piece.voxels.push_back(p);
+        }
+    }
+}
+
 void constructPiece(Voxels &voxels, int pieceNum, int minSize) {
     std::cout << "Constructing piece " << pieceNum << std::endl;
-    OrientedPos seed = findInitialSeed(voxels, true);
+    SeedVoxel seed = findInitialSeed(voxels, true);
     std::vector<Pos> anchors = findAnchors(seed, voxels);
     std::cout << "seed: " << seed.pos <<
         ", removal direction: " << seed.removalDir <<
@@ -293,12 +343,16 @@ void constructPiece(Voxels &voxels, int pieceNum, int minSize) {
     std::cout << "Minimum accessibility: " << voxels.accessibilityHeuristic(pairs.front().blockee, 3) << std::endl;
     std::cout << "Maximum accessibility: " << voxels.accessibilityHeuristic(pairs.back().blockee, 3) << std::endl;
     // each shortest path is a potential piece we might choose
-    std::vector<std::vector<Pos>> potentialPieces = findPotentialPieces(seed.pos, pairs, seed.removalDir, anchors, voxels);
+    std::vector<PotentialPiece> potentialPieces = findPotentialPieces(seed.pos, pairs, seed.removalDir, anchors, voxels);
     std::sort(potentialPieces.begin(), potentialPieces.end(),
         [](const auto &p1, const auto &p2) {
-            return p1.size() < p2.size();
+            return p1.voxels.size() < p2.voxels.size();
         });
-    for (const auto &pos : potentialPieces[0]) {
+    PotentialPiece nextPiece = potentialPieces[0];
+    while ((int)nextPiece.voxels.size() < minSize) {
+        expandPiece(nextPiece, anchors, voxels, seed);
+    }
+    for (const auto &pos : nextPiece.voxels) {
         ++voxels[pos];
     }
 }
@@ -306,7 +360,7 @@ void constructPiece(Voxels &voxels, int pieceNum, int minSize) {
 int main(int argc, char *argv[]) {
     auto voxels = initialiseVoxels(argc, argv);
     std::cout << voxels << std::endl;
-    int pieceSize = voxels.totalVoxelCount() / 4;
+    int pieceSize = voxels.totalVoxelCount() / 10;
     constructPiece(voxels, 1, pieceSize);
     initGlfw(voxels);
     return 0;
