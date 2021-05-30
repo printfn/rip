@@ -234,7 +234,7 @@ bool addUpwardVoxels(
     return true;
 }
 
-std::vector<std::vector<Pos>> findShortestPaths(
+std::vector<std::vector<Pos>> findPotentialPieces(
     Pos from, const std::vector<OrientedPair> &blockingPairs, Direction disallowedDir,
     const std::vector<Pos> anchors, const Voxels &v
 ) {
@@ -279,7 +279,7 @@ std::vector<Pos> findAnchors(const OrientedPos &seed, const Voxels &v) {
     return anchors;
 }
 
-void constructPiece(Voxels &voxels, int pieceNum) {
+void constructPiece(Voxels &voxels, int pieceNum, int minSize) {
     std::cout << "Constructing piece " << pieceNum << std::endl;
     OrientedPos seed = findInitialSeed(voxels, true);
     std::vector<Pos> anchors = findAnchors(seed, voxels);
@@ -293,12 +293,12 @@ void constructPiece(Voxels &voxels, int pieceNum) {
     std::cout << "Maximum accessibility: " << voxels.accessibilityHeuristic(pairs.back().blockee, 3) << std::endl;
     ++voxels[seed.pos];
     // each shortest path is a potential piece we might choose
-    std::vector<std::vector<Pos>> shortestPaths = findShortestPaths(seed.pos, pairs, seed.removalDir, anchors, voxels);
-    std::sort(shortestPaths.begin(), shortestPaths.end(),
+    std::vector<std::vector<Pos>> potentialPieces = findPotentialPieces(seed.pos, pairs, seed.removalDir, anchors, voxels);
+    std::sort(potentialPieces.begin(), potentialPieces.end(),
         [](const auto &p1, const auto &p2) {
             return p1.size() < p2.size();
         });
-    for (const auto &pos : shortestPaths[0]) {
+    for (const auto &pos : potentialPieces[0]) {
         ++voxels[pos];
     }
 }
@@ -306,7 +306,7 @@ void constructPiece(Voxels &voxels, int pieceNum) {
 int main(int argc, char *argv[]) {
     auto voxels = initialiseVoxels(argc, argv);
     std::cout << voxels << std::endl;
-    constructPiece(voxels, 1);
+    constructPiece(voxels, 1, 10);
     initGlfw(voxels);
     return 0;
 }
