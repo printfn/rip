@@ -131,10 +131,10 @@ bool Voxels::hasFreePassage(Pos p, Direction dir, bool checkLowerRank) const {
         p = p.nextInDirection(dir);
         if (!existsAt(p)) continue;
         if (!checkLowerRank) return false;
-        // pieces are removed starting with the lowest rank, so if the
-        // potentially blocking piece is lower than the current piece (`pieceIndex`),
+        // pieces are removed starting with the higher rank, so if the
+        // potentially blocking piece is higher than the current piece (`pieceIndex`),
         // we can ignore it
-        if (pieceIndex <= (*this)[p]) continue;
+        if (pieceIndex >= (*this)[p]) continue;
         return false;
     }
     return true;

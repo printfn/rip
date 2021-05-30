@@ -18,9 +18,13 @@ struct SeedVoxel {
 
     SeedVoxel(Pos p, Direction removalDir, Direction normalDir)
         : pos{p}, removalDir{removalDir}, normalDir{normalDir} {}
+        
+    // subsequent pieces don't have a normal direction
+    SeedVoxel(Pos p, Direction removalDir)
+        : pos{p}, removalDir{removalDir}, normalDir{removalDir} {}
 };
 
-std::vector<SeedVoxel> initialSeedCandidates(const Voxels &v, bool debug = false) {
+std::vector<SeedVoxel> initialSeedCandidates(const Voxels &v, bool debug) {
     std::vector<SeedVoxel> results;
     int skippedDueToWrongFaceCount = 0;
     int skippedDueToNonFreePassage = 0;
@@ -59,11 +63,57 @@ std::vector<SeedVoxel> initialSeedCandidates(const Voxels &v, bool debug = false
     return results;
 }
 
-SeedVoxel findInitialSeed(const Voxels &v, bool debug = false) {
-    auto seeds = initialSeedCandidates(v, debug);
+int costOfSubsequentSeed(const Voxels &v, const SeedVoxel &seed, int pieceNum) {
+    int cost = 0;
+    Pos next = seed.pos.nextInDirection(seed.removalDir);
+    while (v.isInRange(next)) {
+        if (v[next] == 1) ++cost;
+        next = next.nextInDirection(seed.removalDir);
+    }
+    return cost;
+}
+
+std::vector<SeedVoxel> subsequentSeedCandidates(const Voxels &v, bool debug, int pieceNum, Direction previousRemovalDir) {
+    std::vector<SeedVoxel> results;
+    for (int x = 0; x < v.maxX(); ++x) {
+        for (int y = 0; y < v.maxX(); ++y) {
+            for (int z = 0; z < v.maxX(); ++z) {
+                auto p = Pos(x, y, z);
+                if (!v.existsAt(p)) {
+                    continue;
+                }
+                Direction removalDir = previousRemovalDir;
+                for (Direction d : ALL_DIRECTIONS) {
+                    Pos next = p.nextInDirection(d);
+                    // part of previous piece
+                    if (v.existsAt(next) && v[next] == pieceNum && d.isPerpendicular(previousRemovalDir)) {
+                        removalDir = d;
+                    }
+                }
+                if (removalDir == previousRemovalDir) continue;
+                SeedVoxel seed{p, removalDir};
+                std::cout << "cost: " << costOfSubsequentSeed(v, seed, pieceNum) << std::endl;
+                results.push_back(seed);
+            }
+        }
+    }
+    if (debug) {
+        std::cout << "Found " << results.size() << " subsequent seed candidates" << std::endl;
+    }
+    return results;
+}
+
+SeedVoxel findInitialSeed(const Voxels &v, bool debug, int pieceNum, Direction previousRemovalDir) {
+    auto seeds = pieceNum == 1 ? initialSeedCandidates(v, debug) : subsequentSeedCandidates(v, debug, pieceNum, previousRemovalDir);
     if (seeds.empty()) {
-        std::cerr << "Could not find any initial seed candidates!" << std::endl;
+        std::cerr << "Could not find any seed candidates (piece " << pieceNum << ")" << std::endl;
         exit(1);
+    }
+    if (pieceNum > 1) {
+        std::sort(seeds.begin(), seeds.end(), [&v, pieceNum](const SeedVoxel &s1, const SeedVoxel &s2) {
+            // pick the seed that requires the fewest extra voxels
+            return costOfSubsequentSeed(v, s1, pieceNum) < costOfSubsequentSeed(v, s2, pieceNum);
+        });
     }
     return seeds[0];
 }
@@ -127,36 +177,35 @@ std::vector<OrientedPair> inaccessiblePairs(const Voxels &v, SeedVoxel seed, con
 
 Voxels solvedThreeCube() {
     Voxels result{3, 3, 3};
-
-    result[{0, 0, 0}] = 1;
-    result[{0, 0, 1}] = 1;
-    result[{0, 0, 2}] = 1;
+    result[{0, 0, 0}] = 5;
+    result[{0, 0, 1}] = 5;
+    result[{0, 0, 2}] = 5;
     result[{0, 1, 0}] = 3;
-    result[{0, 1, 1}] = 1;
-    result[{0, 1, 2}] = 2;
+    result[{0, 1, 1}] = 5;
+    result[{0, 1, 2}] = 4;
     result[{0, 2, 0}] = 3;
-    result[{0, 2, 1}] = 1;
-    result[{0, 2, 2}] = 2;
+    result[{0, 2, 1}] = 5;
+    result[{0, 2, 2}] = 4;
 
-    result[{1, 0, 0}] = 2;
-    result[{1, 0, 1}] = 4;
-    result[{1, 0, 2}] = 4;
-    result[{1, 1, 0}] = 2;
-    result[{1, 1, 1}] = 2;
-    result[{1, 1, 2}] = 2;
+    result[{1, 0, 0}] = 4;
+    result[{1, 0, 1}] = 2;
+    result[{1, 0, 2}] = 2;
+    result[{1, 1, 0}] = 4;
+    result[{1, 1, 1}] = 4;
+    result[{1, 1, 2}] = 4;
     result[{1, 2, 0}] = 3;
-    result[{1, 2, 1}] = 1;
-    result[{1, 2, 2}] = 1;
+    result[{1, 2, 1}] = 5;
+    result[{1, 2, 2}] = 5;
 
-    result[{2, 0, 0}] = 2;
+    result[{2, 0, 0}] = 4;
     result[{2, 0, 1}] = 3;
-    result[{2, 0, 2}] = 4;
+    result[{2, 0, 2}] = 2;
     result[{2, 1, 0}] = 3;
     result[{2, 1, 1}] = 3;
-    result[{2, 1, 2}] = 4;
+    result[{2, 1, 2}] = 2;
     result[{2, 2, 0}] = 3;
-    result[{2, 2, 1}] = 4;
-    result[{2, 2, 2}] = 4;
+    result[{2, 2, 1}] = 2;
+    result[{2, 2, 2}] = 2;
     return result;
 }
 
@@ -330,9 +379,9 @@ void expandPiece(PotentialPiece &piece, std::vector<Pos> anchors, const Voxels &
     }
 }
 
-void constructPiece(Voxels &voxels, int pieceNum, int minSize) {
+Direction constructPiece(Voxels &voxels, int pieceNum, int minSize, Direction previousRemovalDir) {
     std::cout << "Constructing piece " << pieceNum << std::endl;
-    SeedVoxel seed = findInitialSeed(voxels, true);
+    SeedVoxel seed = findInitialSeed(voxels, true, pieceNum, previousRemovalDir);
     std::vector<Pos> anchors = findAnchors(seed, voxels);
     std::cout << "seed: " << seed.pos <<
         ", removal direction: " << seed.removalDir <<
@@ -353,15 +402,43 @@ void constructPiece(Voxels &voxels, int pieceNum, int minSize) {
         expandPiece(nextPiece, anchors, voxels, seed);
     }
     for (const auto &pos : nextPiece.voxels) {
-        ++voxels[pos];
+        voxels[pos] = pieceNum + 1;
     }
+    
+    return seed.removalDir;
+}
+
+std::vector<Pos> expandSubsequentPieceFromSeed(const Voxels &v, const SeedVoxel &seed) {
+    std::vector<Pos> piece{seed.pos};
+    Pos next = seed.pos.nextInDirection(seed.removalDir);
+    while (v.isInRange(next)) {
+        if (v[next] == 1) {
+            piece.push_back(next);
+        }
+        next = next.nextInDirection(seed.removalDir);
+    }
+    return piece;
+}
+
+Direction constructSubsequentPiece(Voxels &voxels, int pieceNum, int minSize, Direction previousRemovalDir) {
+    std::cout << "Constructing piece " << pieceNum << std::endl;
+    SeedVoxel seed = findInitialSeed(voxels, true, pieceNum, previousRemovalDir);
+    std::vector<Pos> nextPiece = expandSubsequentPieceFromSeed(voxels, seed);
+    
+    for (const auto &pos : nextPiece) {
+        voxels[pos] = pieceNum + 1;
+    }
+
+    return seed.removalDir;
 }
 
 int main(int argc, char *argv[]) {
     auto voxels = initialiseVoxels(argc, argv);
     std::cout << voxels << std::endl;
-    int pieceSize = voxels.totalVoxelCount() / 10;
-    constructPiece(voxels, 1, pieceSize);
+    int pieceSize = voxels.totalVoxelCount() / 4;
+
+    Direction removalDir = constructPiece(voxels, 1, pieceSize, Direction::YP);
+    removalDir = constructSubsequentPiece(voxels, 2, pieceSize, removalDir);
     initGlfw(voxels);
     return 0;
 }

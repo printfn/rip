@@ -45,5 +45,9 @@ VoxelPiece::VoxelPiece(int pieceIdx, int numPieces, Direction dir) {
         case Direction::ZP: dx = 0; dy = 0; dz = 1; break;
         case Direction::ZN: dx = 0; dy = 0; dz = -1; break;
     }
-    movementStart = (numPieces - pieceIdx) * 15;
+    if (pieceIdx == 1) {
+        movementStart = (numPieces - 1) * 15;
+    } else {
+        movementStart = (pieceIdx - 2) * 15;
+    }
 }

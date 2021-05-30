@@ -20,6 +20,7 @@ public:
     friend std::ostream &operator<<(std::ostream &os, const Direction &dir);
 
     Direction opposite() const;
+    bool isPerpendicular(Direction other) const;
 
 private:
     Value value;

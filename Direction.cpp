@@ -42,3 +42,18 @@ Direction Direction::opposite() const {
     }
     return Direction::XP;
 }
+
+bool Direction::isPerpendicular(Direction other) const {
+    switch (*this) {
+        case Direction::XP:
+        case Direction::XN:
+            return other == Direction::YP || other == Direction::YN || other == Direction::ZP || other == Direction::ZN;
+        case Direction::YP:
+        case Direction::YN:
+            return other == Direction::XP || other == Direction::XN || other == Direction::ZP || other == Direction::ZN;
+        case Direction::ZP:
+        case Direction::ZN:
+            return other == Direction::XP || other == Direction::XN || other == Direction::YP || other == Direction::YN;
+    }
+    return false;
+}
