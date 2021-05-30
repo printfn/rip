@@ -249,6 +249,7 @@ std::vector<std::vector<Pos>> findPotentialPieces(
             for (auto &potentialPiece : potShortestPaths) {
                 if (addUpwardVoxels(potentialPiece, disallowedDir, anchors, v)) {
                     // only accept this shortest path if it doesn't include anchors
+                    potentialPiece.push_back(from);
                     shortestPaths.push_back(potentialPiece);
                 }
             }
@@ -291,7 +292,6 @@ void constructPiece(Voxels &voxels, int pieceNum, int minSize) {
     std::cout << "Found " << pairs.size() << " blocking pairs" << std::endl;
     std::cout << "Minimum accessibility: " << voxels.accessibilityHeuristic(pairs.front().blockee, 3) << std::endl;
     std::cout << "Maximum accessibility: " << voxels.accessibilityHeuristic(pairs.back().blockee, 3) << std::endl;
-    ++voxels[seed.pos];
     // each shortest path is a potential piece we might choose
     std::vector<std::vector<Pos>> potentialPieces = findPotentialPieces(seed.pos, pairs, seed.removalDir, anchors, voxels);
     std::sort(potentialPieces.begin(), potentialPieces.end(),
@@ -306,7 +306,8 @@ void constructPiece(Voxels &voxels, int pieceNum, int minSize) {
 int main(int argc, char *argv[]) {
     auto voxels = initialiseVoxels(argc, argv);
     std::cout << voxels << std::endl;
-    constructPiece(voxels, 1, 10);
+    int pieceSize = voxels.totalVoxelCount() / 4;
+    constructPiece(voxels, 1, pieceSize);
     initGlfw(voxels);
     return 0;
 }

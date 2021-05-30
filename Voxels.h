@@ -35,6 +35,7 @@ public:
     int numExteriorFaces(Pos p) const;
     bool hasFreePassage(Pos p, Direction dir, bool checkLowerRank) const;
     int maxPieceIdx() const;
+    int totalVoxelCount() const;
 
     double accessibilityHeuristic(Pos p, int j) const;
     void invalidateAccessibilityHeuristic() const;

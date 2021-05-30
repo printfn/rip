@@ -155,6 +155,20 @@ int Voxels::maxPieceIdx() const {
     return max;
 }
 
+int Voxels::totalVoxelCount() const {
+    int count = 0;
+    for (int x = 0; x < maxX(); ++x) {
+        for (int y = 0; y < maxY(); ++y) {
+            for (int z = 0; z < maxZ(); ++z) {
+                if (existsAt({x, y, z})) {
+                    ++count;
+                }
+            }
+        }
+    }
+    return count;
+}
+
 std::ostream &operator<<(std::ostream &os, const Voxels &v) {
     int mx = v.maxX();
     int my = v.maxY();
