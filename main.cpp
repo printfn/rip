@@ -2,6 +2,7 @@
 #include "Pos.h"
 #include "Voxels.h"
 #include "UI.h"
+#include "utils.h"
 
 #include <algorithm>
 #include <vector>
@@ -12,15 +13,18 @@
 
 struct OrientedPos {
     Pos pos;
-    Direction dir; // direction in which no cube exists
+    Direction removalDir;
+    Direction normalDir; // normal direction in which no cube exists
 
-    OrientedPos(Pos p, Direction d) : pos{p}, dir{d} {}
+    OrientedPos(Pos p, Direction removalDir, Direction normalDir)
+        : pos{p}, removalDir{removalDir}, normalDir{normalDir} {}
 };
 
 std::vector<OrientedPos> initialSeedCandidates(const Voxels &v, bool debug = false) {
     std::vector<OrientedPos> results;
     int skippedDueToWrongFaceCount = 0;
     int skippedDueToNonFreePassage = 0;
+    const Direction removalDir = Direction::YP;
     for (int x = 0; x < v.maxX(); ++x) {
         for (int y = 0; y < v.maxX(); ++y) {
             for (int z = 0; z < v.maxX(); ++z) {
@@ -32,24 +36,25 @@ std::vector<OrientedPos> initialSeedCandidates(const Voxels &v, bool debug = fal
                     ++skippedDueToWrongFaceCount;
                     continue;
                 }
-                if (!v.hasFreePassage(p, Direction::YP, false)) {
+                if (!v.hasFreePassage(p, removalDir, false)) {
                     ++skippedDueToNonFreePassage;
                     continue;
                 }
-                Direction dir = Direction::YP;
-                if (!v.existsAt(p.nextInDirection(Direction::XP))) dir = Direction::XP;
-                if (!v.existsAt(p.nextInDirection(Direction::XN))) dir = Direction::XN;
-                if (!v.existsAt(p.nextInDirection(Direction::YN))) dir = Direction::YN;
-                if (!v.existsAt(p.nextInDirection(Direction::ZP))) dir = Direction::ZP;
-                if (!v.existsAt(p.nextInDirection(Direction::ZN))) dir = Direction::ZN;
-                results.push_back(OrientedPos(p, dir));
+                Direction normalDir = removalDir;
+                if (!v.existsAt(p.nextInDirection(Direction::XP))) normalDir = Direction::XP;
+                if (!v.existsAt(p.nextInDirection(Direction::XN))) normalDir = Direction::XN;
+                if (!v.existsAt(p.nextInDirection(Direction::YN))) normalDir = Direction::YN;
+                if (!v.existsAt(p.nextInDirection(Direction::ZP))) normalDir = Direction::ZP;
+                if (!v.existsAt(p.nextInDirection(Direction::ZN))) normalDir = Direction::ZN;
+                if (normalDir == removalDir) continue;
+                results.push_back(OrientedPos(p, removalDir, normalDir));
             }
         }
     }
     if (debug) {
-        printf("Found %lu initial seed candidates (rejected %i/%i)\n",
-            results.size(), skippedDueToWrongFaceCount,
-            skippedDueToNonFreePassage);
+        std::cout << "Found " << results.size() << " initial seed candidates" <<
+            " (rejected " << skippedDueToWrongFaceCount <<
+            "/" << skippedDueToNonFreePassage << ")" << std::endl;
     }
     return results;
 }
@@ -87,7 +92,7 @@ std::vector<OrientedPair> breadthFirstPairSearch(const Voxels &v, OrientedPos se
         auto pos = queue.front();
         queue.pop_front();
 
-        auto otherPosInPair = pos.nextInDirection(seed.dir.opposite());
+        auto otherPosInPair = pos.nextInDirection(seed.normalDir.opposite());
         if (v.existsAt(pos) && v.existsAt(otherPosInPair)) {
             OrientedPair result{pos, otherPosInPair};
             results.push_back(result);
@@ -170,21 +175,101 @@ Voxels initialiseVoxels(int argc, char *argv[]) {
     }
 }
 
+std::vector<std::vector<Pos>> findPaths(
+    Pos from, Pos to, Pos disallowed, Direction disallowedDir, int maxLength,
+    const Voxels &v
+) {
+    // return all shortest paths, not crossing 'disallowed' or any in disallowedDir
+    if (from == to) return {{}};
+    if (maxLength == 0) return {};
+    std::vector<Pos> steps;
+    for (Direction dir : ALL_DIRECTIONS) {
+        Pos nextPos = from.nextInDirection(dir);
+        if (v[nextPos] == 0) continue;
+        if (nextPos.isInLine(disallowed, disallowedDir.opposite())) continue;
+        if (nextPos == to) {
+            return {{to}};
+        }
+        steps.push_back(nextPos);
+    }
+    std::vector<std::vector<Pos>> allPaths;
+    for (Pos step : steps) {
+        std::vector<std::vector<Pos>> paths = findPaths(
+            step, to, disallowed, disallowedDir, maxLength - 1, v);
+        for (const auto &path : paths) {
+            std::vector<Pos> thisPath;
+            thisPath.push_back(step);
+            for (const auto &nextPos : path) {
+                thisPath.push_back(nextPos);
+            }
+            allPaths.push_back(std::move(thisPath));
+        }
+    }
+    return allPaths;
+}
+
+std::vector<std::vector<Pos>> findShortestPaths(
+    Pos from, Pos to, Pos disallowed, Direction disallowedDir,
+    const Voxels &v
+) {
+    std::vector<std::vector<Pos>> shortestPaths;
+    int shortestPathLength = 0;
+    while (shortestPaths.size() == 0) {
+        ++shortestPathLength;
+        shortestPaths = findPaths(from, to, disallowed, disallowedDir, shortestPathLength, v);
+    }
+    std::cout << "Found " << shortestPaths.size() << " paths " <<
+        "(length " << shortestPathLength << ")" << std::endl;
+    return shortestPaths;
+}
+
+// add any extra voxels in removalDir to path
+void addUpwardVoxels(std::vector<Pos> &path, Direction removalDir, const Voxels &v) {
+    std::vector<Pos> extraVoxels;
+    for (const auto &p : path) {
+        Pos next = p.nextInDirection(removalDir);
+        while (v.existsAt(next)) {
+            if (!contains(path, next) && !contains(extraVoxels, next)) {
+                extraVoxels.push_back(next);
+            }
+            next = next.nextInDirection(removalDir);
+        }
+    }
+    for (const auto &p : extraVoxels) {
+        path.push_back(p);
+    }
+}
+
+void constructPiece(Voxels &voxels, int pieceNum) {
+    std::cout << "Constructing piece " << pieceNum << std::endl;
+    OrientedPos seed = findInitialSeed(voxels, true);
+    std::cout << "seed: " << seed.pos <<
+        ", removal direction: " << seed.removalDir <<
+        ", normal direction: " << seed.normalDir <<
+        ", accessibility: " << voxels.accessibilityHeuristic(seed.pos, 3) << std::endl;
+    auto pairs = inaccessiblePairs(voxels, seed);
+    std::cout << "Found " << pairs.size() << " blocking pairs" << std::endl;
+    std::cout << "Minimum accessibility: " << voxels.accessibilityHeuristic(pairs.front().blockee, 3) << std::endl;
+    std::cout << "Maximum accessibility: " << voxels.accessibilityHeuristic(pairs.back().blockee, 3) << std::endl;
+    ++voxels[seed.pos];
+    // each shortest path is a potential piece we might choose
+    std::vector<std::vector<Pos>> shortestPaths = findShortestPaths(seed.pos, pairs[0].blockee, pairs[0].blocking, seed.removalDir, voxels);
+    for (auto &potentialPiece : shortestPaths) {
+        addUpwardVoxels(potentialPiece, seed.removalDir, voxels);
+    }
+    std::sort(shortestPaths.begin(), shortestPaths.end(),
+        [](const auto &p1, const auto &p2) {
+            return p1.size() < p2.size();
+        });
+    for (const auto &pos : shortestPaths[0]) {
+        ++voxels[pos];
+    }
+}
+
 int main(int argc, char *argv[]) {
     auto voxels = initialiseVoxels(argc, argv);
     std::cout << voxels << std::endl;
-    OrientedPos seed = findInitialSeed(voxels, true);
-    std::cout << "seed: " << seed.pos << std::endl;
-    std::cout << "direction: " << seed.dir << std::endl;
-    printf("accessibility: j = 0: %f\n", voxels.accessibilityHeuristic(seed.pos, 0));
-    printf("accessibility: j = 1: %f\n", voxels.accessibilityHeuristic(seed.pos, 1));
-    printf("accessibility: j = 2: %f\n", voxels.accessibilityHeuristic(seed.pos, 2));
-    printf("accessibility: j = 3: %f\n", voxels.accessibilityHeuristic(seed.pos, 3));
-    auto pairs = inaccessiblePairs(voxels, seed);
-    for (auto &pair : pairs) {
-        std::cout << "blocking: " << pair.blocking << std::endl;
-        std::cout << "blockee:  " << pair.blockee << std::endl;
-    }
+    constructPiece(voxels, 1);
     initGlfw(voxels);
     return 0;
 }

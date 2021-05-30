@@ -12,6 +12,8 @@ struct Pos {
     Pos nextInDirection(Direction d) const;
     bool operator==(const Pos &other) const;
 
+    bool isInLine(const Pos &other, Direction dir) const;
+
     friend std::ostream &operator<<(std::ostream &os, const Pos &p);
 };
 

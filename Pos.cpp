@@ -27,3 +27,20 @@ bool Pos::operator==(const Pos &other) const {
 std::ostream &operator<<(std::ostream &os, const Pos &p) {
     return os << "Pos{" << p.x << ", " << p.y << ", " << p.z << "}";
 }
+
+bool Pos::isInLine(const Pos &other, Direction dir) const {
+    if (*this == other) {
+        return true;
+    }
+
+    switch (dir) {
+        case Direction::XP: return this->x > other.x && this->y == other.y && this->z == other.z;
+        case Direction::XN: return this->x < other.x && this->y == other.y && this->z == other.z;
+        case Direction::YP: return this->x == other.x && this->y > other.y && this->z == other.z;
+        case Direction::YN: return this->x == other.x && this->y < other.y && this->z == other.z;
+        case Direction::ZP: return this->x == other.x && this->y == other.y && this->z > other.z;
+        case Direction::ZN: return this->x == other.x && this->y == other.y && this->z < other.z;
+    }
+
+    return false;
+}

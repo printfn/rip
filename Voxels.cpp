@@ -96,8 +96,7 @@ bool Voxels::existsAt(Pos p) const {
 
 int Voxels::operator[](Pos p) const {
     if (!isInRange(p)) {
-        std::cerr << "tried to get out of range position " << p << std::endl;
-        exit(1);
+        return 0;
     }
     return voxels[p.x * width * height + p.y * width + p.z];
 }
