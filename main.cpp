@@ -341,19 +341,14 @@ std::vector<Pos> findAnchors(const SeedVoxel &seed, const Voxels &v) {
     return anchors;
 }
 
-void expandPiece(PotentialPiece &piece, std::vector<Pos> anchors, const Voxels &v, const SeedVoxel &seed) {
-    Pos additionalAnchor = piece.blockingVoxel;
-    while (v.existsAt(additionalAnchor)) {
-        additionalAnchor = additionalAnchor.nextInDirection(seed.normalDir);
-    }
-    anchors.push_back(additionalAnchor);
-    
+void expandPiece(std::vector<Pos> &piece, std::vector<Pos> anchors, const Voxels &v, const SeedVoxel &seed) {
     std::vector<Pos> candidateVoxels;
-    for (Pos p : piece.voxels) {
+    for (Pos p : piece) {
         for (Direction dir : ALL_DIRECTIONS) {
             Pos cand = p.nextInDirection(dir);
             if (!v.existsAt(cand)) continue;
-            if (contains(piece.voxels, cand)) continue;
+            if (v[cand] != 1) continue;
+            if (contains(piece, cand)) continue;
             if (contains(candidateVoxels, cand)) continue;
             if (contains(anchors, cand)) continue;
             bool skip = false;
@@ -379,10 +374,20 @@ void expandPiece(PotentialPiece &piece, std::vector<Pos> anchors, const Voxels &
     std::cout << "Found " << possibleExpansions.size() << " possible expansions" << std::endl;
     
     for (Pos p : possibleExpansions[0]) {
-        if (!contains(piece.voxels, p)) {
-            piece.voxels.push_back(p);
+        if (!contains(piece, p)) {
+            piece.push_back(p);
         }
     }
+}
+
+void expandPiece(PotentialPiece &piece, std::vector<Pos> anchors, const Voxels &v, const SeedVoxel &seed) {
+    Pos additionalAnchor = piece.blockingVoxel;
+    while (v.existsAt(additionalAnchor)) {
+        additionalAnchor = additionalAnchor.nextInDirection(seed.normalDir);
+    }
+    anchors.push_back(additionalAnchor);
+    
+    expandPiece(piece.voxels, anchors, v, seed);
 }
 
 Direction constructPiece(Voxels &voxels, int pieceNum, int minSize, Direction previousRemovalDir) {
@@ -460,6 +465,10 @@ Direction constructSubsequentPiece(Voxels &voxels, int pieceNum, int minSize, Di
                 }
             }
         }
+    }
+
+    while ((int)nextPiece.size() < minSize) {
+        expandPiece(nextPiece, anchors, voxels, seed);
     }
     
     for (const auto &pos : nextPiece) {
