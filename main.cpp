@@ -235,18 +235,22 @@ bool addUpwardVoxels(
 }
 
 std::vector<std::vector<Pos>> findShortestPaths(
-    Pos from, Pos to, Pos disallowed, Direction disallowedDir,
+    Pos from, const std::vector<OrientedPair> &blockingPairs, Direction disallowedDir,
     const std::vector<Pos> anchors, const Voxels &v
 ) {
     std::vector<std::vector<Pos>> shortestPaths;
     int shortestPathLength = 0;
     while (shortestPaths.size() == 0) {
         ++shortestPathLength;
-        std::vector<std::vector<Pos>> potShortestPaths = findPaths(from, to, disallowed, disallowedDir, shortestPathLength, anchors, v);
-        for (auto &potentialPiece : potShortestPaths) {
-            if (addUpwardVoxels(potentialPiece, disallowedDir, anchors, v)) {
-                // only accept this shortest path if it doesn't include anchors
-                shortestPaths.push_back(potentialPiece);
+        for (const OrientedPair &blockingPair : blockingPairs) {
+            Pos to = blockingPair.blockee;
+            Pos disallowed = blockingPair.blocking;
+            std::vector<std::vector<Pos>> potShortestPaths = findPaths(from, to, disallowed, disallowedDir, shortestPathLength, anchors, v);
+            for (auto &potentialPiece : potShortestPaths) {
+                if (addUpwardVoxels(potentialPiece, disallowedDir, anchors, v)) {
+                    // only accept this shortest path if it doesn't include anchors
+                    shortestPaths.push_back(potentialPiece);
+                }
             }
         }
     }
@@ -289,7 +293,7 @@ void constructPiece(Voxels &voxels, int pieceNum) {
     std::cout << "Maximum accessibility: " << voxels.accessibilityHeuristic(pairs.back().blockee, 3) << std::endl;
     ++voxels[seed.pos];
     // each shortest path is a potential piece we might choose
-    std::vector<std::vector<Pos>> shortestPaths = findShortestPaths(seed.pos, pairs[0].blockee, pairs[0].blocking, seed.removalDir, anchors, voxels);
+    std::vector<std::vector<Pos>> shortestPaths = findShortestPaths(seed.pos, pairs, seed.removalDir, anchors, voxels);
     std::sort(shortestPaths.begin(), shortestPaths.end(),
         [](const auto &p1, const auto &p2) {
             return p1.size() < p2.size();
