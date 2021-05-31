@@ -135,7 +135,7 @@ struct OrientedPair {
 };
 
 std::vector<OrientedPair> breadthFirstPairSearch(
-    const Voxels &v, SeedVoxel seed, const std::vector<Pos> &anchors, int pieceNum
+    const Voxels &v, SeedVoxel seed, const std::vector<Pos> &anchors
 ) {
     std::vector<OrientedPair> results;
     std::vector<Pos> done;
@@ -166,9 +166,9 @@ std::vector<OrientedPair> breadthFirstPairSearch(
 }
 
 std::vector<OrientedPair> inaccessiblePairs(
-    const Voxels &v, SeedVoxel seed, const std::vector<Pos> &anchors, int pieceNum
+    const Voxels &v, SeedVoxel seed, const std::vector<Pos> &anchors
 ) {
-    std::vector<OrientedPair> candidates = breadthFirstPairSearch(v, seed, anchors, pieceNum);
+    std::vector<OrientedPair> candidates = breadthFirstPairSearch(v, seed, anchors);
     std::sort(candidates.begin(), candidates.end(),
         [&v](const OrientedPair &p1, const OrientedPair &p2) {
             double a1 = v.accessibilityHeuristic(p1.blockee, 3);
@@ -398,7 +398,7 @@ Direction constructPiece(Voxels &voxels, int pieceNum, int minSize, Direction pr
         ", removal direction: " << seed.removalDir <<
         ", normal direction: " << seed.normalDir <<
         ", accessibility: " << voxels.accessibilityHeuristic(seed.pos, 3) << std::endl;
-    auto pairs = inaccessiblePairs(voxels, seed, anchors, pieceNum);
+    auto pairs = inaccessiblePairs(voxels, seed, anchors);
     std::cout << "Found " << pairs.size() << " blocking pairs" << std::endl;
     std::cout << "Minimum accessibility: " << voxels.accessibilityHeuristic(pairs.front().blockee, 3) << std::endl;
     std::cout << "Maximum accessibility: " << voxels.accessibilityHeuristic(pairs.back().blockee, 3) << std::endl;
@@ -425,6 +425,8 @@ std::vector<Pos> expandSubsequentPieceFromSeed(const Voxels &v, const SeedVoxel 
     while (v.isInRange(next)) {
         if (v[next] == 1) {
             piece.push_back(next);
+        } else {
+            break;
         }
         next = next.nextInDirection(seed.removalDir);
     }
@@ -452,7 +454,7 @@ Direction constructSubsequentPiece(Voxels &voxels, int pieceNum, int minSize, Di
         if (freePassage) {
             seed.normalDir = d;
             anchors = findAnchors(seed, voxels);
-            auto pairs = inaccessiblePairs(voxels, seed, anchors, pieceNum);
+            auto pairs = inaccessiblePairs(voxels, seed, anchors);
             std::cout << "Found " << pairs.size() << " blocking pairs" << std::endl;
             std::vector<PotentialPiece> potentialPieces = findPotentialPieces(seed.pos, pairs, seed.removalDir, anchors, voxels);
             std::sort(potentialPieces.begin(), potentialPieces.end(),
@@ -496,8 +498,10 @@ int main(int argc, char *argv[]) {
     std::cout << voxels << std::endl;
     int pieceSize = voxels.totalVoxelCount() / 4;
 
-    Direction removalDir = constructPiece(voxels, 1, pieceSize, Direction::YP);
-    removalDir = constructSubsequentPiece(voxels, 2, pieceSize, removalDir);
+    if (argc == 2) {
+        Direction removalDir = constructPiece(voxels, 1, pieceSize, Direction::YP);
+        removalDir = constructSubsequentPiece(voxels, 2, pieceSize, removalDir);
+    }
     designateFinalPiece(voxels);
     initGlfw(voxels);
     return 0;
