@@ -63,7 +63,7 @@ std::vector<SeedVoxel> initialSeedCandidates(const Voxels &v, bool debug) {
     return results;
 }
 
-int costOfSubsequentSeed(const Voxels &v, const SeedVoxel &seed, int pieceNum) {
+int costOfSubsequentSeed(const Voxels &v, const SeedVoxel &seed) {
     int cost = 0;
     Pos next = seed.pos.nextInDirection(seed.removalDir);
     while (v.isInRange(next)) {
@@ -92,7 +92,7 @@ std::vector<SeedVoxel> subsequentSeedCandidates(const Voxels &v, bool debug, int
                 }
                 if (removalDir == previousRemovalDir) continue;
                 SeedVoxel seed{p, removalDir};
-                std::cout << "cost: " << costOfSubsequentSeed(v, seed, pieceNum) << std::endl;
+                std::cout << "cost: " << costOfSubsequentSeed(v, seed) << std::endl;
                 results.push_back(seed);
             }
         }
@@ -110,9 +110,9 @@ SeedVoxel findInitialSeed(const Voxels &v, bool debug, int pieceNum, Direction p
         exit(1);
     }
     if (pieceNum > 1) {
-        std::sort(seeds.begin(), seeds.end(), [&v, pieceNum](const SeedVoxel &s1, const SeedVoxel &s2) {
+        std::sort(seeds.begin(), seeds.end(), [&v](const SeedVoxel &s1, const SeedVoxel &s2) {
             // pick the seed that requires the fewest extra voxels
-            return costOfSubsequentSeed(v, s1, pieceNum) < costOfSubsequentSeed(v, s2, pieceNum);
+            return costOfSubsequentSeed(v, s1) < costOfSubsequentSeed(v, s2);
         });
     }
     return seeds[0];
